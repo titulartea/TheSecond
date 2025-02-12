@@ -6,24 +6,30 @@ const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
- * 영상 URL로부터 중간 프레임 썸네일을 생성하는 함수
+ * 영상 URL로부터 "중간 프레임" 썸네일을 생성하는 함수
+ * - 데스크탑 브라우저에서 메타데이터 로드/시킹 문제를 방지하기 위해
+ *   임시로 비디오를 DOM에 추가한 뒤, 썸네일을 생성하고 제거한다.
  * @param {string} videoUrl - 영상의 URL
  * @param {function} callback - 썸네일 dataURL을 반환할 콜백 함수
  */
 function generateVideoThumbnail(videoUrl, callback) {
   const tempVideo = document.createElement("video");
+  // 임시로 DOM에 추가 (데스크탑에서 메타데이터 로드/시킹 안정화)
+  tempVideo.style.display = "none";
+  document.body.appendChild(tempVideo);
+
   tempVideo.src = videoUrl;
   tempVideo.crossOrigin = "anonymous";
   tempVideo.preload = "metadata";
   tempVideo.muted = true;
   tempVideo.playsInline = true;
 
-  // 메타데이터 로드 후 중간 지점으로 이동
+  // 메타데이터가 로드되면, 영상 중간 지점으로 이동
   tempVideo.addEventListener("loadedmetadata", function () {
     tempVideo.currentTime = tempVideo.duration / 2;
   });
 
-  // seek가 완료되면 캔버스에 그려 썸네일 생성
+  // 중간 지점으로 이동한 후, 캔버스에 그려서 썸네일 생성
   tempVideo.addEventListener("seeked", function () {
     const canvas = document.createElement("canvas");
     canvas.width = tempVideo.videoWidth;
@@ -31,6 +37,11 @@ function generateVideoThumbnail(videoUrl, callback) {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
     const thumbnailDataUrl = canvas.toDataURL();
+
+    // 작업이 끝나면 임시 비디오를 DOM에서 제거
+    document.body.removeChild(tempVideo);
+
+    // 콜백으로 썸네일 dataURL 반환
     callback(thumbnailDataUrl);
   });
 }
@@ -186,6 +197,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const photoRecord = insertedData[0];
     const galleryItem = document.createElement("div");
     galleryItem.className = "gallery-item";
+
+    // 업로드 후 썸네일/이미지 갤러리에 추가
     if (mediaType === "video") {
       generateVideoThumbnail(urlData.publicUrl, function (thumbnailUrl) {
         const img = document.createElement("img");
@@ -223,6 +236,8 @@ document.addEventListener("DOMContentLoaded", function () {
     data.forEach((item) => {
       const galleryItem = document.createElement("div");
       galleryItem.className = "gallery-item";
+
+      // 영상이면 썸네일 생성, 이미지면 바로 표시
       if (item.media_type === "video") {
         const videoUrl = item.url;
         generateVideoThumbnail(videoUrl, function (thumbnailUrl) {
@@ -288,6 +303,7 @@ document.addEventListener("DOMContentLoaded", function () {
       mediaType: mediaType,
       element: targetMedia.parentElement,
     };
+
     if (mediaType === "video") {
       let modalVideo = document.getElementById("modalVideo");
       if (!modalVideo) {
@@ -298,6 +314,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modalVideo.controls = true;
         modalVideo.style.borderRadius = "8px";
         modalVideo.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        // 재생 중에는 이전/다음 버튼 비활성화
         modalVideo.addEventListener("play", function () {
           prevBtn.style.pointerEvents = "none";
           nextBtn.style.pointerEvents = "none";
@@ -337,6 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
     currentScale = 1.0;
     imageModal.style.display = "flex";
   }
+
   /* ---------- 터치 이벤트: 슬라이드와 핀치 구분 ---------- */
   imageModal.addEventListener("touchstart", function (e) {
     if (e.touches.length === 2) {
@@ -356,7 +374,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
   imageModal.addEventListener("touchend", function (e) {
-    // 동영상이 재생 중이면 터치로 인한 슬라이드 전환 무시
+    // 동영상 재생 중이면 슬라이드 전환 무시
     if (currentPhotoRecord && currentPhotoRecord.mediaType === "video") {
       const modalVideo = document.getElementById("modalVideo");
       if (modalVideo && !modalVideo.paused) return;

@@ -542,3 +542,9 @@ header {
 .dropdown:hover .dropdown-content {
   display: block;
 }
+#modalVideo {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background-color: #000; /* 혹은 다른 배경색 */
+}
