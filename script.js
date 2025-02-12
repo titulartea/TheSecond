@@ -5,6 +5,29 @@ const SUPABASE_KEY =
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/**
+ * 영상 URL로부터 첫 프레임 썸네일을 생성하는 함수
+ * @param {string} videoUrl - 영상의 URL
+ * @param {function} callback - 썸네일 dataURL을 반환할 콜백 함수
+ */
+function generateVideoThumbnail(videoUrl, callback) {
+  const tempVideo = document.createElement("video");
+  tempVideo.src = videoUrl;
+  tempVideo.crossOrigin = "anonymous";
+  tempVideo.preload = "metadata";
+  tempVideo.muted = true;
+  tempVideo.playsInline = true;
+  tempVideo.addEventListener("loadeddata", function () {
+    const canvas = document.createElement("canvas");
+    canvas.width = tempVideo.videoWidth;
+    canvas.height = tempVideo.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+    const thumbnailDataUrl = canvas.toDataURL();
+    callback(thumbnailDataUrl);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   /* ---------- 요소 선택 ---------- */
   const uploadBtn = document.getElementById("uploadBtn");
@@ -42,12 +65,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const carousel = document.getElementById("carousel");
   const prevCarousel = document.getElementById("prevCarousel");
   const nextCarousel = document.getElementById("nextCarousel");
+  const carouselBg = document.getElementById("carousel-bg");
+
+  // 추천 미디어 캐러셀 관련 변수
+  let carouselIndex = 0;
+  let carouselSlides = [];
+  let carouselTimer = null;
+  const carouselInterval = 2500;
 
   // 새 사진 옵션 모달 관련 요소
   const photoOptionsModal = document.getElementById("photoOptionsModal");
-  const closePhotoOptionsModal = document.getElementById(
-    "closePhotoOptionsModal"
-  );
+  const btnExitOptions = document.getElementById("btnExitOptions");
+  const btnEditPhoto = document.getElementById("btnEditPhoto");
+  const btnDeletePhoto = document.getElementById("btnDeletePhoto");
 
   // 수정 시 파일 변경용 숨김 파일 입력
   const editFileInput = document.getElementById("editFileInput");
@@ -68,28 +98,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const limit = 32;
   let currentIndex = 0;
   let currentPhotoRecord = null;
-  let carouselIndex = 0;
-  let carouselSlides = [];
-  let carouselTimer = null;
-  const carouselInterval = 2500;
 
   /* ---------- 모달 및 탭 전환 ---------- */
   uploadBtn.addEventListener("click", function () {
     mainModal.style.display = "flex";
     activateTab("galleryTab");
   });
-
   closeMainModal.addEventListener("click", function () {
     mainModal.style.display = "none";
   });
-
   tabButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
       const tabToActivate = this.getAttribute("data-tab");
       activateTab(tabToActivate);
     });
   });
-
   function activateTab(tabId) {
     if (tabId === "galleryTab") {
       galleryTab.style.display = "block";
@@ -106,7 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  /* ---------- 갤러리 업로드 ---------- */
+  /* ---------- 갤러리 업로드 (이미지/영상 공용) ---------- */
   submitBtn.addEventListener("click", async function () {
     const password = passwordInput.value;
     const description = descriptionInput.value.trim();
@@ -115,10 +138,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if (fileInput.files.length === 0) {
-      alert("사진을 선택해주세요!");
+      alert("파일을 선택해주세요!");
       return;
     }
     const file = fileInput.files[0];
+    const mediaType = file.type.startsWith("video/") ? "video" : "image";
     const filePath = `uploads/${Date.now()}_${file.name}`;
     const { error } = await supabaseClient.storage
       .from("images")
@@ -132,35 +156,53 @@ document.addEventListener("DOMContentLoaded", function () {
       .getPublicUrl(filePath);
     if (urlError) {
       alert(
-        "이미지 URL을 가져오는 중 오류가 발생했습니다: " + urlError.message
+        "미디어 URL을 가져오는 중 오류가 발생했습니다: " + urlError.message
       );
       return;
     }
     const { data: insertedData, error: insertError } = await supabaseClient
       .from("photos")
-      .insert([{ url: urlData.publicUrl, description }], {
-        returning: "representation",
-      });
+      .insert(
+        [{ url: urlData.publicUrl, description, media_type: mediaType }],
+        {
+          returning: "representation",
+        }
+      );
     if (insertError) {
       alert(
-        "사진 정보를 저장하는 중 오류가 발생했습니다: " +
+        "미디어 정보를 저장하는 중 오류가 발생했습니다: " +
           (insertError.message || JSON.stringify(insertError))
       );
       return;
     }
+    alert("업로드 완료!"); // 업로드 완료 얼럿 추가
     const photoRecord = insertedData[0];
     const galleryItem = document.createElement("div");
     galleryItem.className = "gallery-item";
-    const img = document.createElement("img");
-    img.src = urlData.publicUrl;
-    img.setAttribute("data-description", description);
-    img.setAttribute("data-id", photoRecord.id);
-    galleryItem.appendChild(img);
-    gallery.insertBefore(galleryItem, gallery.firstChild);
+    if (mediaType === "video") {
+      generateVideoThumbnail(urlData.publicUrl, function (thumbnailUrl) {
+        const img = document.createElement("img");
+        img.src = thumbnailUrl;
+        img.setAttribute("data-description", description);
+        img.setAttribute("data-id", photoRecord.id);
+        img.setAttribute("data-media", "video");
+        img.setAttribute("data-video-src", urlData.publicUrl);
+        galleryItem.appendChild(img);
+        gallery.insertBefore(galleryItem, gallery.firstChild);
+      });
+    } else {
+      const img = document.createElement("img");
+      img.src = urlData.publicUrl;
+      img.setAttribute("data-description", description);
+      img.setAttribute("data-id", photoRecord.id);
+      img.setAttribute("data-media", "image");
+      galleryItem.appendChild(img);
+      gallery.insertBefore(galleryItem, gallery.firstChild);
+    }
     mainModal.style.display = "none";
   });
 
-  /* ---------- 갤러리 로드 ---------- */
+  /* ---------- 갤러리 로드 (이미지/영상 공용) ---------- */
   async function loadGallery() {
     const { data, error } = await supabaseClient
       .from("photos")
@@ -174,28 +216,45 @@ document.addEventListener("DOMContentLoaded", function () {
     data.forEach((item) => {
       const galleryItem = document.createElement("div");
       galleryItem.className = "gallery-item";
-      const img = document.createElement("img");
-      img.src = item.url;
-      img.setAttribute(
-        "data-description",
-        item.description || "설명이 없습니다."
-      );
-      img.setAttribute("data-id", item.id);
-      galleryItem.appendChild(img);
-      gallery.appendChild(galleryItem);
+      if (item.media_type === "video") {
+        const videoUrl = item.url;
+        generateVideoThumbnail(videoUrl, function (thumbnailUrl) {
+          const img = document.createElement("img");
+          img.src = thumbnailUrl;
+          img.setAttribute(
+            "data-description",
+            item.description || "설명이 없습니다."
+          );
+          img.setAttribute("data-id", item.id);
+          img.setAttribute("data-media", "video");
+          img.setAttribute("data-video-src", videoUrl);
+          galleryItem.appendChild(img);
+          gallery.appendChild(galleryItem);
+        });
+      } else {
+        const img = document.createElement("img");
+        img.src = item.url;
+        img.setAttribute(
+          "data-description",
+          item.description || "설명이 없습니다."
+        );
+        img.setAttribute("data-id", item.id);
+        img.setAttribute("data-media", "image");
+        galleryItem.appendChild(img);
+        gallery.appendChild(galleryItem);
+      }
     });
     offset += limit;
     loadMoreBtn.style.display = data.length < limit ? "none" : "block";
   }
-
   loadMoreBtn.addEventListener("click", loadGallery);
   loadGallery();
 
-  /* ---------- 갤러리 이미지 확대 및 현재 사진 정보 저장 ---------- */
+  /* ---------- 갤러리 이미지/영상 확대 및 모달 처리 ---------- */
   gallery.addEventListener("click", function (e) {
-    if (e.target.tagName === "IMG") {
+    if (e.target.tagName === "IMG" || e.target.tagName === "VIDEO") {
       const galleryItems = Array.from(
-        gallery.querySelectorAll(".gallery-item img")
+        gallery.querySelectorAll(".gallery-item > *")
       );
       currentIndex = galleryItems.indexOf(e.target);
       openImageModal(currentIndex);
@@ -204,68 +263,105 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function openImageModal(index, animate = false) {
     const galleryItems = Array.from(
-      gallery.querySelectorAll(".gallery-item img")
+      gallery.querySelectorAll(".gallery-item > *")
     );
-    const targetImg = galleryItems[index];
-    if (!targetImg) return;
+    const targetMedia = galleryItems[index];
+    if (!targetMedia) return;
+    const mediaType =
+      targetMedia.getAttribute("data-media") ||
+      targetMedia.tagName.toLowerCase();
     currentPhotoRecord = {
-      id: targetImg.getAttribute("data-id"),
-      url: targetImg.src,
+      id: targetMedia.getAttribute("data-id"),
+      url:
+        mediaType === "video"
+          ? targetMedia.getAttribute("data-video-src")
+          : targetMedia.src,
       description:
-        targetImg.getAttribute("data-description") || "설명이 없습니다.",
-      element: targetImg.parentElement,
+        targetMedia.getAttribute("data-description") || "설명이 없습니다.",
+      mediaType: mediaType,
+      element: targetMedia.parentElement,
     };
-    if (animate) {
-      modalImage.style.opacity = 0;
-      setTimeout(() => {
-        modalImage.src = targetImg.src;
-        imageDescription.textContent = currentPhotoRecord.description;
-      }, 300);
-      setTimeout(() => {
-        modalImage.style.opacity = 1;
-      }, 350);
+    if (mediaType === "video") {
+      let modalVideo = document.getElementById("modalVideo");
+      if (!modalVideo) {
+        modalVideo = document.createElement("video");
+        modalVideo.id = "modalVideo";
+        modalVideo.style.maxWidth = "100%";
+        modalVideo.style.maxHeight = "80vh";
+        modalVideo.controls = true;
+        modalVideo.style.borderRadius = "8px";
+        modalVideo.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        // 영상 재생 중 좌우 버튼 비활성화
+        modalVideo.addEventListener("play", function () {
+          prevBtn.style.pointerEvents = "none";
+          nextBtn.style.pointerEvents = "none";
+          prevBtn.style.opacity = 0.3;
+          nextBtn.style.opacity = 0.3;
+        });
+        modalVideo.addEventListener("pause", function () {
+          prevBtn.style.pointerEvents = "";
+          nextBtn.style.pointerEvents = "";
+          prevBtn.style.opacity = "";
+          nextBtn.style.opacity = "";
+        });
+        modalVideo.addEventListener("ended", function () {
+          prevBtn.style.pointerEvents = "";
+          nextBtn.style.pointerEvents = "";
+          prevBtn.style.opacity = "";
+          nextBtn.style.opacity = "";
+        });
+        imageModal
+          .querySelector(".image-modal")
+          .insertBefore(modalVideo, imageDescription);
+      }
+      modalImage.style.display = "none";
+      modalVideo.style.display = "block";
+      modalVideo.src = currentPhotoRecord.url;
+      // 명시적으로 width/height 설정 후 load()와 play() 호출
+      modalVideo.style.width = "100%";
+      modalVideo.style.height = "auto";
+      modalVideo.load();
+      modalVideo.play();
     } else {
-      modalImage.src = targetImg.src;
-      imageDescription.textContent = currentPhotoRecord.description;
+      let modalVideo = document.getElementById("modalVideo");
+      if (modalVideo) modalVideo.style.display = "none";
+      modalImage.style.display = "block";
+      modalImage.src = currentPhotoRecord.url;
     }
-    // 확대/축소 초기화
+    imageDescription.textContent = currentPhotoRecord.description;
     currentScale = 1.0;
-    modalImage.style.transform = `scale(${currentScale})`;
     imageModal.style.display = "flex";
   }
 
   closeImageBtn.addEventListener("click", function () {
     imageModal.style.display = "none";
   });
-
   imageModal.addEventListener("click", function (e) {
     if (e.target === imageModal) {
       imageModal.style.display = "none";
     }
   });
-
   prevBtn.addEventListener("click", function (e) {
     e.stopPropagation();
     const galleryItems = Array.from(
-      gallery.querySelectorAll(".gallery-item img")
+      gallery.querySelectorAll(".gallery-item > *")
     );
     currentIndex =
       (currentIndex - 1 + galleryItems.length) % galleryItems.length;
     openImageModal(currentIndex, true);
   });
-
   nextBtn.addEventListener("click", async function (e) {
     e.stopPropagation();
     let galleryItems = Array.from(
-      gallery.querySelectorAll(".gallery-item img")
+      gallery.querySelectorAll(".gallery-item > *")
     );
     if (currentIndex === galleryItems.length - 1) {
       await loadGallery();
-      galleryItems = Array.from(gallery.querySelectorAll(".gallery-item img"));
+      galleryItems = Array.from(gallery.querySelectorAll(".gallery-item > *"));
       if (currentIndex < galleryItems.length - 1) {
         currentIndex++;
       } else {
-        alert("더 이상 사진이 없습니다.");
+        alert("더 이상 미디어가 없습니다.");
         return;
       }
     } else {
@@ -287,16 +383,14 @@ document.addEventListener("DOMContentLoaded", function () {
       isPinching = false;
     }
   });
-
   imageModal.addEventListener("touchmove", function (e) {
     if (e.touches.length === 2) {
       isPinching = true;
     }
   });
-
   imageModal.addEventListener("touchend", function (e) {
     if (isPinching) {
-      slideDisabledUntil = Date.now() + 1000; // 핀치 후 1초 동안 슬라이드 비활성화
+      slideDisabledUntil = Date.now() + 1000;
       isPinching = false;
       return;
     }
@@ -311,279 +405,26 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ---------- 확대/축소 버튼 동작 ---------- */
   zoomInBtn.addEventListener("click", function () {
     currentScale += 0.1;
-    modalImage.style.transform = `scale(${currentScale})`;
-  });
-
-  zoomOutBtn.addEventListener("click", function () {
-    if (currentScale > 0.3) {
-      currentScale -= 0.1;
+    if (currentPhotoRecord.mediaType === "video") {
+      let modalVideo = document.getElementById("modalVideo");
+      if (modalVideo) modalVideo.style.transform = `scale(${currentScale})`;
+    } else {
       modalImage.style.transform = `scale(${currentScale})`;
     }
   });
-
-  /* ---------- 사진 옵션 모달 동작 ---------- */
-  openOptionBtn.addEventListener("click", function () {
-    photoOptionsModal.style.display = "flex";
-  });
-
-  const btnExitOptions = document.getElementById("btnExitOptions");
-  btnExitOptions.addEventListener("click", function () {
-    photoOptionsModal.style.display = "none";
-  });
-
-  const btnEditPhoto = document.getElementById("btnEditPhoto");
-  btnEditPhoto.addEventListener("click", async function () {
-    const pwd = prompt("수정을 위해 비밀번호를 입력하세요");
-    if (pwd !== "america") {
-      alert("비밀번호가 틀렸습니다!");
-      return;
-    }
-    let modType = prompt(
-      "어떤 수정을 원하시나요? 1) 사진 파일 변경 2) 설명 수정 (1 또는 2 입력)"
-    );
-    if (modType === "1") {
-      editFileInput.click();
-      editFileInput.onchange = async function (event) {
-        if (event.target.files.length > 0) {
-          const file = event.target.files[0];
-          const filePath = `uploads/${Date.now()}_${file.name}`;
-          const oldUrl = currentPhotoRecord.url;
-          const { error } = await supabaseClient.storage
-            .from("images")
-            .upload(filePath, file);
-          if (error) {
-            alert("업로드 중 오류: " + error.message);
-            return;
-          }
-          const { data: urlData, error: urlError } = supabaseClient.storage
-            .from("images")
-            .getPublicUrl(filePath);
-          if (urlError) {
-            alert("이미지 URL 가져오기 오류: " + urlError.message);
-            return;
-          }
-          let newDescription = prompt(
-            "사진 설명을 업데이트 하시겠습니까? (취소 시 기존 설명 유지)",
-            currentPhotoRecord.description
-          );
-          newDescription =
-            newDescription === null
-              ? currentPhotoRecord.description
-              : newDescription;
-          const { error: updateError } = await supabaseClient
-            .from("photos")
-            .update({ url: urlData.publicUrl, description: newDescription })
-            .eq("id", currentPhotoRecord.id);
-          if (updateError) {
-            alert("수정 오류: " + updateError.message);
-            return;
-          }
-          const oldFilePath = getFilePathFromUrl(oldUrl);
-          if (oldFilePath) {
-            await supabaseClient.storage.from("images").remove([oldFilePath]);
-          }
-          alert("사진이 수정되었습니다.");
-          currentPhotoRecord.element.querySelector("img").src =
-            urlData.publicUrl;
-          currentPhotoRecord.element
-            .querySelector("img")
-            .setAttribute("data-description", newDescription);
-          modalImage.src = urlData.publicUrl;
-          imageDescription.textContent = newDescription;
-        }
-      };
-    } else if (modType === "2") {
-      let newDescription = prompt(
-        "새로운 사진 설명을 입력하세요",
-        currentPhotoRecord.description
-      );
-      if (newDescription === null) return;
-      const { error: updateError } = await supabaseClient
-        .from("photos")
-        .update({ description: newDescription })
-        .eq("id", currentPhotoRecord.id);
-      if (updateError) {
-        alert("수정 오류: " + updateError.message);
-        return;
-      }
-      alert("사진 설명이 수정되었습니다.");
-      currentPhotoRecord.element
-        .querySelector("img")
-        .setAttribute("data-description", newDescription);
-      imageDescription.textContent = newDescription;
-    } else {
-      alert("올바른 옵션을 선택하세요.");
-    }
-    photoOptionsModal.style.display = "none";
-  });
-
-  const btnDeletePhoto = document.getElementById("btnDeletePhoto");
-  btnDeletePhoto.addEventListener("click", async function () {
-    const pwd = prompt("삭제를 위해 비밀번호를 입력하세요");
-    if (pwd !== "america") {
-      alert("비밀번호가 틀렸습니다!");
-      return;
-    }
-    photoOptionsModal.style.display = "none";
-    const { error } = await supabaseClient
-      .from("photos")
-      .delete()
-      .eq("id", currentPhotoRecord.id);
-    if (error) {
-      alert("삭제 오류: " + error.message);
-      return;
-    }
-    const filePath = getFilePathFromUrl(currentPhotoRecord.url);
-    if (filePath) {
-      await supabaseClient.storage.from("images").remove([filePath]);
-    }
-    alert("사진이 삭제되었습니다.");
-    currentPhotoRecord.element.remove();
-    imageModal.style.display = "none";
-  });
-
-  function getFilePathFromUrl(url) {
-    const marker = "/uploads/";
-    const index = url.indexOf(marker);
-    if (index === -1) return null;
-    return url.substring(index + 1);
-  }
-
-  /* ---------- 갤러리 캐러셀 로드 및 관리 ---------- */
-  async function loadRecommended() {
-    const { data, error } = await supabaseClient
-      .from("recommended")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      console.error("추천 사진 로드 오류:", error.message);
-      return;
-    }
-    carousel.innerHTML = "";
-    carouselSlides = [];
-    if (data.length === 0) {
-      // 추천 데이터가 없으면 기본 메시지 슬라이드를 추가
-      carousel.innerHTML =
-        '<div class="carousel-slide">추천 사진이 없습니다.</div>';
-      carouselSlides.push(document.querySelector(".carousel-slide"));
-    } else {
-      data.forEach((item) => {
-        const slide = document.createElement("div");
-        slide.className = "carousel-slide";
-        const img = document.createElement("img");
-        img.src = item.url;
-        img.alt = item.description || "추천 사진";
-        img.addEventListener("click", function () {
-          openRecommendedModal(item.url, item.description);
-        });
-        const delBtn = document.createElement("button");
-        delBtn.className = "delete-rec";
-        delBtn.textContent = "×";
-        delBtn.style.backgroundColor = "#f44336";
-        delBtn.style.color = "white";
-        delBtn.addEventListener("click", async function (e) {
-          e.stopPropagation();
-          const pwd = prompt("삭제를 위해 비밀번호를 입력하세요");
-          if (pwd !== "america") {
-            alert("비밀번호가 틀렸습니다!");
-            return;
-          }
-          const { error: delError } = await supabaseClient
-            .from("recommended")
-            .delete()
-            .eq("id", item.id);
-          if (delError) {
-            alert("삭제 중 오류가 발생했습니다: " + delError.message);
-            return;
-          }
-          const filePath = getFilePathFromUrl(item.url);
-          if (filePath) {
-            await supabaseClient.storage.from("images").remove([filePath]);
-          }
-          alert("삭제되었습니다.");
-          loadRecommendedList();
-          loadRecommended();
-        });
-        slide.appendChild(img);
-        slide.appendChild(delBtn);
-        carousel.appendChild(slide);
-        carouselSlides.push(slide);
-      });
-    }
-    carouselIndex = 0;
-    updateCarousel();
-    startCarouselAuto();
-  }
-
-  function updateCarousel() {
-    const offsetX = -carouselIndex * 100;
-    carousel.style.transform = `translateX(${offsetX}%)`;
-    if (carouselSlides[carouselIndex]) {
-      const currentSlideImg =
-        carouselSlides[carouselIndex].querySelector("img");
-      if (currentSlideImg) {
-        document.getElementById(
-          "carousel-bg"
-        ).style.backgroundImage = `url(${currentSlideImg.src})`;
+  zoomOutBtn.addEventListener("click", function () {
+    if (currentScale > 0.3) {
+      currentScale -= 0.1;
+      if (currentPhotoRecord.mediaType === "video") {
+        let modalVideo = document.getElementById("modalVideo");
+        if (modalVideo) modalVideo.style.transform = `scale(${currentScale})`;
       } else {
-        document.getElementById("carousel-bg").style.backgroundImage = "";
+        modalImage.style.transform = `scale(${currentScale})`;
       }
-    } else {
-      document.getElementById("carousel-bg").style.backgroundImage = "";
-    }
-  }
-
-  prevCarousel.addEventListener("click", function () {
-    if (carouselSlides.length === 0) return;
-    carouselIndex =
-      (carouselIndex - 1 + carouselSlides.length) % carouselSlides.length;
-    updateCarousel();
-    resetCarouselAuto();
-  });
-
-  nextCarousel.addEventListener("click", function () {
-    if (carouselSlides.length === 0) return;
-    carouselIndex = (carouselIndex + 1) % carouselSlides.length;
-    updateCarousel();
-    resetCarouselAuto();
-  });
-
-  let touchStartX = 0;
-  let touchEndX = 0;
-  carousel.addEventListener("touchstart", function (e) {
-    touchStartX = e.touches[0].clientX;
-  });
-  carousel.addEventListener("touchend", function (e) {
-    touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
-    if (Math.abs(diff) > 50) {
-      diff > 0
-        ? (carouselIndex = (carouselIndex + 1) % carouselSlides.length)
-        : (carouselIndex =
-            (carouselIndex - 1 + carouselSlides.length) %
-            carouselSlides.length);
-      updateCarousel();
-      resetCarouselAuto();
     }
   });
 
-  function startCarouselAuto() {
-    if (carouselTimer) clearInterval(carouselTimer);
-    carouselTimer = setInterval(() => {
-      if (carouselSlides.length === 0) return;
-      carouselIndex = (carouselIndex + 1) % carouselSlides.length;
-      updateCarousel();
-    }, carouselInterval);
-  }
-
-  function resetCarouselAuto() {
-    clearInterval(carouselTimer);
-    startCarouselAuto();
-  }
-
-  loadRecommended();
-
-  /* ---------- 추천 사진 관리 탭 ---------- */
+  /* ---------- 추천 미디어 관리 탭 (이미지/영상 공용) ---------- */
   submitRecBtn.addEventListener("click", async function () {
     const password = recPasswordInput.value;
     const description = recDescriptionInput.value.trim();
@@ -592,10 +433,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if (recFileInput.files.length === 0) {
-      alert("사진을 선택해주세요!");
+      alert("파일을 선택해주세요!");
       return;
     }
     const file = recFileInput.files[0];
+    const mediaType = file.type.startsWith("video/") ? "video" : "image";
     const filePath = `uploads/${Date.now()}_${file.name}`;
     const { error } = await supabaseClient.storage
       .from("images")
@@ -609,21 +451,21 @@ document.addEventListener("DOMContentLoaded", function () {
       .getPublicUrl(filePath);
     if (urlError) {
       alert(
-        "이미지 URL을 가져오는 중 오류가 발생했습니다: " + urlError.message
+        "미디어 URL을 가져오는 중 오류가 발생했습니다: " + urlError.message
       );
       return;
     }
     const { error: insertError } = await supabaseClient
       .from("recommended")
-      .insert([{ url: urlData.publicUrl, description }]);
+      .insert([{ url: urlData.publicUrl, description, media_type: mediaType }]);
     if (insertError) {
       alert(
-        "추천 사진 정보를 저장하는 중 오류가 발생했습니다: " +
+        "추천 미디어 정보를 저장하는 중 오류가 발생했습니다: " +
           (insertError.message || JSON.stringify(insertError))
       );
       return;
     }
-    alert("추천 사진 업로드 성공!");
+    alert("추천 미디어 업로드 성공!");
     loadRecommendedList();
     loadRecommended();
   });
@@ -634,18 +476,27 @@ document.addEventListener("DOMContentLoaded", function () {
       .select("*")
       .order("created_at", { ascending: false });
     if (error) {
-      console.error("추천 사진 목록 로드 오류:", error.message);
+      console.error("추천 미디어 목록 로드 오류:", error.message);
       return;
     }
     recList.innerHTML = "";
     if (data.length === 0) {
-      recList.innerHTML = "<div>추천 사진이 없습니다.</div>";
+      recList.innerHTML = "<div>추천 미디어가 없습니다.</div>";
     } else {
       data.forEach((item) => {
         const recItem = document.createElement("div");
         recItem.className = "rec-item";
-        const thumb = document.createElement("img");
-        thumb.src = item.url;
+        let thumb;
+        if (item.media_type === "video") {
+          thumb = document.createElement("video");
+          thumb.src = item.url;
+          thumb.controls = true;
+          thumb.style.width = "60px";
+          thumb.style.height = "auto";
+        } else {
+          thumb = document.createElement("img");
+          thumb.src = item.url;
+        }
         const info = document.createElement("span");
         info.textContent = item.description || "";
         const delBtn = document.createElement("button");
@@ -653,7 +504,8 @@ document.addEventListener("DOMContentLoaded", function () {
         delBtn.textContent = "삭제";
         delBtn.style.backgroundColor = "#f44336";
         delBtn.style.color = "white";
-        delBtn.addEventListener("click", async function () {
+        delBtn.addEventListener("click", async function (e) {
+          e.stopPropagation();
           const pwd = prompt("삭제를 위해 비밀번호를 입력하세요");
           if (pwd !== "america") {
             alert("비밀번호가 틀렸습니다!");
@@ -683,9 +535,190 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function openRecommendedModal(src, description) {
-    modalImage.src = src;
+  async function loadRecommended() {
+    const { data, error } = await supabaseClient
+      .from("recommended")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("추천 미디어 로드 오류:", error.message);
+      return;
+    }
+    carousel.innerHTML = "";
+    carouselSlides = [];
+    if (data.length === 0) {
+      carousel.innerHTML =
+        '<div class="carousel-slide">추천 미디어가 없습니다.</div>';
+      carouselSlides.push(document.querySelector(".carousel-slide"));
+    } else {
+      data.forEach((item) => {
+        const slide = document.createElement("div");
+        slide.className = "carousel-slide";
+        let mediaElement;
+        if (item.media_type === "video") {
+          mediaElement = document.createElement("video");
+          mediaElement.src = item.url;
+          mediaElement.controls = true;
+          mediaElement.style.width = "100%";
+          mediaElement.style.height = "100%";
+        } else {
+          mediaElement = document.createElement("img");
+          mediaElement.src = item.url;
+        }
+        mediaElement.alt = item.description || "추천 미디어";
+        mediaElement.addEventListener("click", function () {
+          openRecommendedModal(item.url, item.description, item.media_type);
+        });
+        const delBtn = document.createElement("button");
+        delBtn.className = "delete-rec";
+        delBtn.textContent = "×";
+        delBtn.style.backgroundColor = "#f44336";
+        delBtn.style.color = "white";
+        delBtn.addEventListener("click", async function (e) {
+          e.stopPropagation();
+          const pwd = prompt("삭제를 위해 비밀번호를 입력하세요");
+          if (pwd !== "america") {
+            alert("비밀번호가 틀렸습니다!");
+            return;
+          }
+          const { error: delError } = await supabaseClient
+            .from("recommended")
+            .delete()
+            .eq("id", item.id);
+          if (delError) {
+            alert("삭제 중 오류가 발생했습니다: " + delError.message);
+            return;
+          }
+          const filePath = getFilePathFromUrl(item.url);
+          if (filePath) {
+            await supabaseClient.storage.from("images").remove([filePath]);
+          }
+          alert("삭제되었습니다.");
+          loadRecommendedList();
+          loadRecommended();
+        });
+        slide.appendChild(mediaElement);
+        slide.appendChild(delBtn);
+        carousel.appendChild(slide);
+        carouselSlides.push(slide);
+      });
+    }
+    carouselIndex = 0;
+    updateCarousel();
+    startCarouselAuto();
+  }
+
+  function updateCarousel() {
+    const offsetX = -carouselIndex * 100;
+    carousel.style.transform = `translateX(${offsetX}%)`;
+    if (carouselSlides[carouselIndex]) {
+      const currentMedia =
+        carouselSlides[carouselIndex].querySelector("img, video");
+      if (currentMedia) {
+        carouselBg.style.backgroundImage = `url(${currentMedia.src})`;
+      } else {
+        carouselBg.style.backgroundImage = "";
+      }
+    } else {
+      carouselBg.style.backgroundImage = "";
+    }
+  }
+  function startCarouselAuto() {
+    if (carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(() => {
+      if (carouselSlides.length === 0) return;
+      carouselIndex = (carouselIndex + 1) % carouselSlides.length;
+      updateCarousel();
+    }, carouselInterval);
+  }
+  function resetCarouselAuto() {
+    clearInterval(carouselTimer);
+    startCarouselAuto();
+  }
+  prevCarousel.addEventListener("click", function () {
+    if (carouselSlides.length === 0) return;
+    carouselIndex =
+      (carouselIndex - 1 + carouselSlides.length) % carouselSlides.length;
+    updateCarousel();
+    resetCarouselAuto();
+  });
+  nextCarousel.addEventListener("click", function () {
+    if (carouselSlides.length === 0) return;
+    carouselIndex = (carouselIndex + 1) % carouselSlides.length;
+    updateCarousel();
+    resetCarouselAuto();
+  });
+  let carouselTouchStartX = 0;
+  let carouselTouchEndX = 0;
+  carousel.addEventListener("touchstart", function (e) {
+    carouselTouchStartX = e.touches[0].clientX;
+  });
+  carousel.addEventListener("touchend", function (e) {
+    carouselTouchEndX = e.changedTouches[0].clientX;
+    const diff = carouselTouchStartX - carouselTouchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        carouselIndex = (carouselIndex + 1) % carouselSlides.length;
+      } else {
+        carouselIndex =
+          (carouselIndex - 1 + carouselSlides.length) % carouselSlides.length;
+      }
+      updateCarousel();
+      resetCarouselAuto();
+    }
+  });
+
+  function openRecommendedModal(src, description, media_type) {
+    if (media_type === "video") {
+      let modalVideo = document.getElementById("modalVideo");
+      if (!modalVideo) {
+        modalVideo = document.createElement("video");
+        modalVideo.id = "modalVideo";
+        modalVideo.style.maxWidth = "100%";
+        modalVideo.style.maxHeight = "80vh";
+        modalVideo.controls = true;
+        modalVideo.style.borderRadius = "8px";
+        modalVideo.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        imageModal
+          .querySelector(".image-modal")
+          .insertBefore(modalVideo, imageDescription);
+      }
+      modalImage.style.display = "none";
+      modalVideo.style.display = "block";
+      modalVideo.src = src;
+      modalVideo.style.width = "100%";
+      modalVideo.style.height = "auto";
+      modalVideo.load();
+      modalVideo.play();
+    } else {
+      let modalVideo = document.getElementById("modalVideo");
+      if (modalVideo) modalVideo.style.display = "none";
+      modalImage.style.display = "block";
+      modalImage.src = src;
+    }
     imageDescription.textContent = description || "설명이 없습니다.";
+    currentPhotoRecord = {
+      url: src,
+      description: description,
+      mediaType: media_type || "image",
+    };
+    currentScale = 1.0;
+    if (currentPhotoRecord.mediaType === "video") {
+      let modalVideo = document.getElementById("modalVideo");
+      if (modalVideo) modalVideo.style.transform = `scale(${currentScale})`;
+    } else {
+      modalImage.style.transform = `scale(${currentScale})`;
+    }
     imageModal.style.display = "flex";
   }
+
+  function getFilePathFromUrl(url) {
+    const marker = "/uploads/";
+    const index = url.indexOf(marker);
+    if (index === -1) return null;
+    return url.substring(index + 1);
+  }
+
+  // 초기 추천 캐러셀 로드
+  loadRecommended();
 });
