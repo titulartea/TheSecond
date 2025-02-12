@@ -6,7 +6,7 @@ const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
- * 영상 URL로부터 첫 프레임 썸네일을 생성하는 함수
+ * 영상 URL로부터 중간 프레임 썸네일을 생성하는 함수
  * @param {string} videoUrl - 영상의 URL
  * @param {function} callback - 썸네일 dataURL을 반환할 콜백 함수
  */
@@ -17,7 +17,14 @@ function generateVideoThumbnail(videoUrl, callback) {
   tempVideo.preload = "metadata";
   tempVideo.muted = true;
   tempVideo.playsInline = true;
-  tempVideo.addEventListener("loadeddata", function () {
+
+  // 메타데이터 로드 후 중간 지점으로 이동
+  tempVideo.addEventListener("loadedmetadata", function () {
+    tempVideo.currentTime = tempVideo.duration / 2;
+  });
+
+  // seek가 완료되면 캔버스에 그려 썸네일 생성
+  tempVideo.addEventListener("seeked", function () {
     const canvas = document.createElement("canvas");
     canvas.width = tempVideo.videoWidth;
     canvas.height = tempVideo.videoHeight;
@@ -175,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       return;
     }
-    alert("업로드 완료!"); // 업로드 완료 얼럿 추가
+    alert("업로드 완료!");
     const photoRecord = insertedData[0];
     const galleryItem = document.createElement("div");
     galleryItem.className = "gallery-item";
@@ -291,7 +298,6 @@ document.addEventListener("DOMContentLoaded", function () {
         modalVideo.controls = true;
         modalVideo.style.borderRadius = "8px";
         modalVideo.style.transition = "transform 0.2s ease, opacity 0.2s ease";
-        // 영상 재생 중 좌우 버튼 비활성화
         modalVideo.addEventListener("play", function () {
           prevBtn.style.pointerEvents = "none";
           nextBtn.style.pointerEvents = "none";
@@ -317,7 +323,6 @@ document.addEventListener("DOMContentLoaded", function () {
       modalImage.style.display = "none";
       modalVideo.style.display = "block";
       modalVideo.src = currentPhotoRecord.url;
-      // 명시적으로 width/height 설정 후 load()와 play() 호출
       modalVideo.style.width = "100%";
       modalVideo.style.height = "auto";
       modalVideo.load();
@@ -332,44 +337,6 @@ document.addEventListener("DOMContentLoaded", function () {
     currentScale = 1.0;
     imageModal.style.display = "flex";
   }
-
-  closeImageBtn.addEventListener("click", function () {
-    imageModal.style.display = "none";
-  });
-  imageModal.addEventListener("click", function (e) {
-    if (e.target === imageModal) {
-      imageModal.style.display = "none";
-    }
-  });
-  prevBtn.addEventListener("click", function (e) {
-    e.stopPropagation();
-    const galleryItems = Array.from(
-      gallery.querySelectorAll(".gallery-item > *")
-    );
-    currentIndex =
-      (currentIndex - 1 + galleryItems.length) % galleryItems.length;
-    openImageModal(currentIndex, true);
-  });
-  nextBtn.addEventListener("click", async function (e) {
-    e.stopPropagation();
-    let galleryItems = Array.from(
-      gallery.querySelectorAll(".gallery-item > *")
-    );
-    if (currentIndex === galleryItems.length - 1) {
-      await loadGallery();
-      galleryItems = Array.from(gallery.querySelectorAll(".gallery-item > *"));
-      if (currentIndex < galleryItems.length - 1) {
-        currentIndex++;
-      } else {
-        alert("더 이상 미디어가 없습니다.");
-        return;
-      }
-    } else {
-      currentIndex++;
-    }
-    openImageModal(currentIndex, true);
-  });
-
   /* ---------- 터치 이벤트: 슬라이드와 핀치 구분 ---------- */
   imageModal.addEventListener("touchstart", function (e) {
     if (e.touches.length === 2) {
@@ -389,6 +356,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
   imageModal.addEventListener("touchend", function (e) {
+    // 동영상이 재생 중이면 터치로 인한 슬라이드 전환 무시
+    if (currentPhotoRecord && currentPhotoRecord.mediaType === "video") {
+      const modalVideo = document.getElementById("modalVideo");
+      if (modalVideo && !modalVideo.paused) return;
+    }
     if (isPinching) {
       slideDisabledUntil = Date.now() + 1000;
       isPinching = false;
@@ -422,6 +394,56 @@ document.addEventListener("DOMContentLoaded", function () {
         modalImage.style.transform = `scale(${currentScale})`;
       }
     }
+  });
+
+  /* ---------- 모달 닫을 때 동영상 재생 종료 ---------- */
+  closeImageBtn.addEventListener("click", function () {
+    imageModal.style.display = "none";
+    const modalVideo = document.getElementById("modalVideo");
+    if (modalVideo) {
+      modalVideo.pause();
+      modalVideo.currentTime = 0;
+    }
+  });
+  imageModal.addEventListener("click", function (e) {
+    if (e.target === imageModal) {
+      imageModal.style.display = "none";
+      const modalVideo = document.getElementById("modalVideo");
+      if (modalVideo) {
+        modalVideo.pause();
+        modalVideo.currentTime = 0;
+      }
+    }
+  });
+
+  /* ---------- 갤러리 내 이전/다음 버튼 ---------- */
+  prevBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    const galleryItems = Array.from(
+      gallery.querySelectorAll(".gallery-item > *")
+    );
+    currentIndex =
+      (currentIndex - 1 + galleryItems.length) % galleryItems.length;
+    openImageModal(currentIndex, true);
+  });
+  nextBtn.addEventListener("click", async function (e) {
+    e.stopPropagation();
+    let galleryItems = Array.from(
+      gallery.querySelectorAll(".gallery-item > *")
+    );
+    if (currentIndex === galleryItems.length - 1) {
+      await loadGallery();
+      galleryItems = Array.from(gallery.querySelectorAll(".gallery-item > *"));
+      if (currentIndex < galleryItems.length - 1) {
+        currentIndex++;
+      } else {
+        alert("더 이상 미디어가 없습니다.");
+        return;
+      }
+    } else {
+      currentIndex++;
+    }
+    openImageModal(currentIndex, true);
   });
 
   /* ---------- 추천 미디어 관리 탭 (이미지/영상 공용) ---------- */
