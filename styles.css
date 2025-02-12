@@ -1,0 +1,544 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: rgb(200, 200, 200);
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+header {
+  color: rgb(228, 225, 237);
+  height: 40px;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  padding: 10px;
+  font-size: x-small;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgb(34, 33, 41);
+}
+
+/* 갤러리 캐러셀 컨테이너 */
+#carousel-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 90%;
+  height: 200pt;
+  margin: 20px auto;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+#carousel-bg {
+  transition: 2s;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px) brightness(0.7);
+  z-index: 0;
+}
+
+#carousel {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  z-index: 1;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: transparent;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  user-select: none;
+  z-index: 2;
+}
+
+.carousel-arrow.left {
+  left: 10px;
+  width: 30%;
+  height: 100%;
+  opacity: 0;
+}
+
+.carousel-arrow.right {
+  right: 10px;
+  width: 30%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* 갤러리 Grid 레이아웃 */
+#gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  min-block-size: 500px;
+  padding: 5%;
+  min-width: 200px;
+}
+
+.gallery-item {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.gallery-item img:hover {
+  transform: scale(1.03);
+}
+
+/* 모달 공통 스타일 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  justify-content: center;
+  align-items: center;
+}
+
+/* 업로드 모달 스타일 */
+.upload-modal {
+  background-color: #fefefe;
+  padding: 20px;
+  border-radius: 8px;
+  width: 320px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* 모달 닫기 버튼 */
+.close {
+  float: right;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/* 탭 버튼 영역 */
+.tab-buttons {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #ccc;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.tab-btn.active {
+  background: #41a314;
+  color: white;
+}
+
+/* 탭 내용 영역 */
+.tab-content {
+  text-align: left;
+}
+
+/* 추천 사진 목록 스타일 */
+#recList {
+  margin-top: 15px;
+}
+
+.rec-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rec-item img {
+  width: 60px;
+  height: auto;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.delete-rec {
+  display: none;
+}
+
+/* "더 보기" 버튼 */
+#loadMoreBtn {
+  margin: auto;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: xx-large;
+  font-weight: bolder;
+  background: rgb(255, 255, 255, 0);
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  transition: 0.3s;
+  display: block;
+}
+
+/* 이미지 확대 모달 스타일 */
+.image-modal {
+  position: relative;
+  background: rgba(0, 0, 0, 0);
+  padding: 10px;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#modalImage {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 8px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* 이미지 설명 */
+#imageDescription {
+  color: white;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+/* 업로드 버튼 및 입력폼 스타일 */
+#uploadBtn {
+  font-size: 200%;
+  background: none;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#password,
+#description,
+#recPassword,
+#recDescription {
+  width: 90%;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+#fileInput,
+#recFileInput {
+  margin: 5px;
+  padding: 10px;
+}
+
+/* 추천 사진 업로드 버튼 */
+#submitBtn,
+#submitRecBtn {
+  margin: 5px;
+  padding: 10px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* 좌우 화살표 버튼 (갤러리 확대 모달) */
+.arrow {
+  position: fixed;
+  width: 50%;
+  height: 30%;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: rgb(168, 168, 168);
+  cursor: pointer;
+  user-select: none;
+  z-index: 20;
+  padding: 10px;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.arrow.left {
+  display: flex;
+  padding-top: 100px;
+  justify-content: flex-start;
+  left: 20px;
+}
+
+.arrow.right {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 100px;
+  right: 20px;
+}
+
+.modal-close-btn {
+  position: fixed;
+  top: 20px;
+  margin-left: 10px;
+  margin-top: 10px;
+  padding: 13px 16px;
+  background-color: rgba(98, 97, 109, 0.4);
+  color: white;
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-close-btn:hover {
+  background-color: #41a314;
+}
+
+#openOptionBtn {
+  position: fixed;
+  top: 10px;
+  right: 20px;
+  background: none;
+  font-weight: 900;
+  font-size: x-large;
+}
+
+/* 새 사진 옵션 모달 스타일 */
+#photoOptionsModal {
+  display: none;
+  position: fixed;
+  z-index: 11;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  justify-content: center;
+  align-items: center;
+}
+#photoOptionsModal .modal-content.option-modal {
+  width: 300px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+#photoOptionsModal .modal-btn.exit-btn {
+  margin-top: 15px;
+  background-color: #ffffff;
+  color: black;
+  border: 2px solid #000;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* 추가: 이미지 컨테이너 및 확대/축소 컨트롤 */
+.image-container {
+  position: relative;
+}
+
+#zoomControls {
+  border-radius: 90px;
+  position: fixed;
+  top: 23px;
+  padding-bottom: 5px;
+  font-size: x-large;
+  right: 70px;
+  display: flex;
+  gap: 5px;
+  z-index: 20;
+  display: none;
+}
+
+#zoomControls button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2em;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+/* 사진 옵션 모달 전체 영역 */
+#photoOptionsModal {
+  display: none; /* 기본 상태: 숨김 */
+  position: fixed;
+  z-index: 11;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 사진 옵션 모달 내부 컨텐츠 */
+#photoOptionsModal .modal-content.option-modal {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+  position: relative;
+}
+
+/* 모달 제목 스타일 */
+#photoOptionsModal .modal-content.option-modal h3 {
+  margin-top: 0;
+  font-size: 1.5em;
+  color: #333333;
+}
+
+/* 사진 옵션 모달 버튼 공통 스타일 */
+#photoOptionsModal .modal-content.option-modal button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* 수정 버튼 스타일 */
+#photoOptionsModal .modal-content.option-modal button#btnEditPhoto {
+  background-color: #41a314;
+  color: #ffffff;
+}
+
+/* 삭제 버튼 스타일 */
+#photoOptionsModal .modal-content.option-modal button#btnDeletePhoto {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+/* 나가기 버튼 스타일 */
+#photoOptionsModal .modal-content.option-modal button#btnExitOptions {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+#header-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+}
+#notificationSettingsBtn {
+  display: none;
+  background-color: rgba(47, 48, 55, 0.9);
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 드롭다운 컨테이너 */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* 드롭다운 버튼 */
+.dropdown-btn {
+  background-color: #41a314;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: medium;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+/* 드롭다운 메뉴 */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  border-radius: 8px;
+}
+
+/* 드롭다운 메뉴 링크 */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* 링크 호버 효과 */
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+/* 마우스 오버 시 메뉴 표시 */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
