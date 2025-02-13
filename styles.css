@@ -548,3 +548,247 @@ header {
   object-fit: contain;
   background-color: #000; /* 혹은 다른 배경색 */
 }
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+header {
+  color: #ffffff;
+  height: 60px;
+  font-family: "Arial", sans-serif;
+  padding: 15px;
+  font-size: medium;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+#carousel-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 90%;
+  height: 250px;
+  margin: 20px auto;
+  overflow: hidden;
+  border-radius: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#carousel-bg {
+  transition: 2s;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px) brightness(0.6);
+  z-index: 0;
+}
+
+#carousel {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  z-index: 1;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: transparent;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: #ffffff;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  user-select: none;
+  z-index: 2;
+  transition: background 0.3s;
+}
+
+.carousel-arrow:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+#gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.gallery-item {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s;
+}
+
+.gallery-item:hover {
+  transform: scale(1.05);
+}
+
+.gallery-item img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-modal {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.close {
+  float: right;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+.tab-buttons {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: #e0e0e0;
+  cursor: pointer;
+  transition: background 0.3s;
+  border-radius: 5px;
+}
+
+.tab-btn.active {
+  background: #41a314;
+  color: white;
+}
+
+#loadMoreBtn {
+  margin: auto;
+  margin-bottom: 20px;
+  padding: 12px;
+  font-size: large;
+  font-weight: bold;
+  background: #41a314;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#loadMoreBtn:hover {
+  background: #3498db;
+}
+
+.modal-close-btn {
+  padding: 10px 15px;
+  background-color: #41a314;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-close-btn:hover {
+  background-color: #3498db;
+}
+
+#photoOptionsModal .modal-content.option-modal {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+}
+
+#photoOptionsModal .modal-content.option-modal h3 {
+  margin-top: 0;
+  font-size: 1.5em;
+  color: #333;
+}
+
+#photoOptionsModal .modal-content.option-modal button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 1em;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#photoOptionsModal .modal-content.option-modal button#btnEditPhoto {
+  background-color: #41a314;
+  color: #ffffff;
+}
+
+#photoOptionsModal .modal-content.option-modal button#btnDeletePhoto {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+#photoOptionsModal .modal-content.option-modal button#btnExitOptions {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
