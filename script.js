@@ -47,6 +47,14 @@ function generateVideoThumbnail(videoUrl, callback) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  /* ---------- 모달 관련 전역 변수 (모달 히스토리, 터치 좌표 등) ---------- */
+  let modalHistoryPushed = false;
+  let modalTouchStartX = 0;
+  let modalTouchStartY = 0;
+  let modalInitialDistance = 0;
+  let isPinching = false;
+  let slideDisabledUntil = 0;
+
   /* ---------- 요소 선택 ---------- */
   const uploadBtn = document.getElementById("uploadBtn");
   const mainModal = document.getElementById("mainModal");
@@ -105,17 +113,33 @@ document.addEventListener("DOMContentLoaded", function () {
   const zoomInBtn = document.getElementById("zoomInBtn");
   const zoomOutBtn = document.getElementById("zoomOutBtn");
 
-  // 터치 이벤트 관련 (슬라이드와 핀치 구분)
-  let modalTouchStartX = 0;
-  let modalInitialDistance = 0;
-  let isPinching = false;
-  let slideDisabledUntil = 0;
-
   // 기타 변수
   let offset = 0;
   const limit = 32;
   let currentIndex = 0;
   let currentPhotoRecord = null;
+
+  /* ---------- 모달 닫기 공통 함수 ---------- */
+  function closeModal(manual = false) {
+    imageModal.style.display = "none";
+    const modalVideo = document.getElementById("modalVideo");
+    if (modalVideo) {
+      modalVideo.pause();
+      modalVideo.currentTime = 0;
+    }
+    // 사용자가 직접 모달을 닫은 경우에만 히스토리 상태를 되돌림
+    if (manual && modalHistoryPushed) {
+      modalHistoryPushed = false;
+      history.back();
+    }
+  }
+
+  /* ---------- 브라우저 뒤로가기(popstate) 이벤트 (모바일 포함) ---------- */
+  window.addEventListener("popstate", function (event) {
+    if (imageModal.style.display === "flex") {
+      closeModal(false);
+    }
+  });
 
   /* ---------- 모달 및 탭 전환 ---------- */
   uploadBtn.addEventListener("click", function () {
@@ -353,9 +377,15 @@ document.addEventListener("DOMContentLoaded", function () {
     imageDescription.textContent = currentPhotoRecord.description;
     currentScale = 1.0;
     imageModal.style.display = "flex";
+
+    // 모달 오픈 시 히스토리 상태 추가 (아직 추가되지 않았다면)
+    if (!modalHistoryPushed) {
+      history.pushState({ modalOpen: true }, "");
+      modalHistoryPushed = true;
+    }
   }
 
-  /* ---------- 터치 이벤트: 슬라이드와 핀치 구분 ---------- */
+  /* ---------- 터치 이벤트: 슬라이드와 핀치 구분, 아래로 스와이프 시 모달 닫기 ---------- */
   imageModal.addEventListener("touchstart", function (e) {
     if (e.touches.length === 2) {
       modalInitialDistance = Math.hypot(
@@ -365,6 +395,7 @@ document.addEventListener("DOMContentLoaded", function () {
       isPinching = true;
     } else if (e.touches.length === 1) {
       modalTouchStartX = e.touches[0].clientX;
+      modalTouchStartY = e.touches[0].clientY;
       isPinching = false;
     }
   });
@@ -385,10 +416,21 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if (Date.now() < slideDisabledUntil) return;
+
     let modalTouchEndX = e.changedTouches[0].clientX;
-    let diff = modalTouchStartX - modalTouchEndX;
-    if (Math.abs(diff) > 50) {
-      diff > 0 ? nextBtn.click() : prevBtn.click();
+    let modalTouchEndY = e.changedTouches[0].clientY;
+    let diffX = modalTouchStartX - modalTouchEndX;
+    let diffY = modalTouchEndY - modalTouchStartY;
+
+    // 수직으로 50px 이상 내려갔고, 수평 이동보다 수직 이동이 더 큰 경우 모달 닫기
+    if (diffY > 50 && diffY > Math.abs(diffX)) {
+      closeModal(true);
+      return;
+    }
+
+    // 가로 스와이프 (좌우 슬라이드 전환)
+    if (Math.abs(diffX) > 50) {
+      diffX > 0 ? nextBtn.click() : prevBtn.click();
     }
   });
 
@@ -416,21 +458,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* ---------- 모달 닫을 때 동영상 재생 종료 ---------- */
   closeImageBtn.addEventListener("click", function () {
-    imageModal.style.display = "none";
-    const modalVideo = document.getElementById("modalVideo");
-    if (modalVideo) {
-      modalVideo.pause();
-      modalVideo.currentTime = 0;
-    }
+    closeModal(true);
   });
   imageModal.addEventListener("click", function (e) {
     if (e.target === imageModal) {
-      imageModal.style.display = "none";
-      const modalVideo = document.getElementById("modalVideo");
-      if (modalVideo) {
-        modalVideo.pause();
-        modalVideo.currentTime = 0;
-      }
+      closeModal(true);
     }
   });
 
@@ -750,6 +782,12 @@ document.addEventListener("DOMContentLoaded", function () {
       modalImage.style.transform = `scale(${currentScale})`;
     }
     imageModal.style.display = "flex";
+
+    // 모달 오픈 시 히스토리 상태 추가 (아직 추가되지 않았다면)
+    if (!modalHistoryPushed) {
+      history.pushState({ modalOpen: true }, "");
+      modalHistoryPushed = true;
+    }
   }
 
   function getFilePathFromUrl(url) {
@@ -761,4 +799,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 초기 추천 캐러셀 로드
   loadRecommended();
+});
+// 사진 옵션 모달 열기
+openOptionBtn.addEventListener("click", function (e) {
+  e.stopPropagation(); // 이벤트 전파 방지
+  photoOptionsModal.style.display = "flex";
+});
+
+// 사진 옵션 모달 닫기 (나가기 버튼)
+btnExitOptions.addEventListener("click", function () {
+  photoOptionsModal.style.display = "none";
 });
