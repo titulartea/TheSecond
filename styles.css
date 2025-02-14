@@ -10,7 +10,7 @@ body {
 header {
   color: rgb(0, 0, 0);
   height: 40px;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: Arial, sans-serif;
   font-size: 10px;
   padding: 10px;
   display: flex;
@@ -230,7 +230,7 @@ header {
 /* 이미지 확대 모달 스타일 */
 .image-modal {
   position: relative;
-  background: rgba(0, 0, 0, 0);
+  background: rgba(106, 106, 106, 0);
   padding: 10px;
   border-radius: 8px;
   max-width: 90%;
@@ -512,7 +512,6 @@ header {
   color: white;
   border: none;
   padding: 10px;
-  font-size: medium;
   cursor: pointer;
   border-radius: 8px;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
@@ -599,7 +598,6 @@ dropdown-btn:hover,
   display: block;
 }
 .header-title {
-  font-size: medium;
   color: #41a314;
   display: flex;
   align-items: space-between;

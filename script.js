@@ -810,3 +810,41 @@ openOptionBtn.addEventListener("click", function (e) {
 btnExitOptions.addEventListener("click", function () {
   photoOptionsModal.style.display = "none";
 });
+btnDeletePhoto.addEventListener("click", async function () {
+  const password = prompt("삭제를 위해 비밀번호를 입력하세요");
+  if (password !== "america") {
+    alert("비밀번호가 틀렸습니다!");
+    return;
+  }
+
+  if (!currentPhotoRecord) {
+    alert("삭제할 사진이 선택되지 않았습니다.");
+    return;
+  }
+
+  const { error: delError } = await supabaseClient
+    .from("photos")
+    .delete()
+    .eq("id", currentPhotoRecord.id);
+
+  if (delError) {
+    alert("삭제 중 오류가 발생했습니다: " + delError.message);
+    return;
+  }
+
+  const filePath = getFilePathFromUrl(currentPhotoRecord.url);
+  if (filePath) {
+    await supabaseClient.storage.from("images").remove([filePath]);
+  }
+
+  alert("사진이 삭제되었습니다.");
+  photoOptionsModal.style.display = "none";
+  currentPhotoRecord.element.remove(); // 갤러리에서 사진 제거
+});
+// 예시: 수정 버튼 이벤트 리스너
+btnEditPhoto.addEventListener("click", function () {
+  // 수정 로직 구현
+  alert("수정 기능이 아직 구현되지 않았습니다.");
+});
+
+// 예시: 삭제 버튼 이벤트 리스너
