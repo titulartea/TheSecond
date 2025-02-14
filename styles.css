@@ -10,9 +10,9 @@ body {
 header {
   color: rgb(0, 0, 0);
   height: 40px;
-  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 10px;
   padding: 10px;
-  font-size: x-small;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -515,6 +515,8 @@ header {
   font-size: medium;
   cursor: pointer;
   border-radius: 8px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: 900;
 }
 
 /* 드롭다운 메뉴 */
@@ -595,4 +597,10 @@ dropdown-btn:hover,
 /* 모바일 환경에서 클릭 시 메뉴 표시 */
 .dropdown.active .dropdown-content {
   display: block;
+}
+.header-title {
+  font-size: medium;
+  color: #41a314;
+  display: flex;
+  align-items: space-between;
 }
