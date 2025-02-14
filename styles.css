@@ -141,7 +141,7 @@ header {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.6);
   justify-content: center;
   align-items: center;
 }
@@ -601,4 +601,135 @@ dropdown-btn:hover,
   color: #41a314;
   display: flex;
   align-items: space-between;
+}
+/* 옵션 모달 전체 배경 */
+#photoOptionsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* 반투명 검은 배경 */
+  display: none; /* 기본은 숨김 */
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 모달 내부 콘텐츠 영역 */
+#photoOptionsModal .modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 모달 내 버튼 기본 스타일 */
+#photoOptionsModal button {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#photoOptionsModal button:hover {
+  background: #0056b3;
+}
+
+/* 사진 삭제 버튼 스타일 (빨간색) */
+#photoOptionsModal #btnDeletePhoto {
+  background: #dc3545;
+}
+
+#photoOptionsModal #btnDeletePhoto:hover {
+  background: #b02a37;
+}
+
+/* 사진 파일 변경 버튼 스타일 (녹색) */
+#photoOptionsModal #btnChangePhotoFile {
+  background: #28a745;
+}
+
+#photoOptionsModal #btnChangePhotoFile:hover {
+  background: #1e7e34;
+}
+/* 옵션 모달 전체 배경 */
+#photoOptionsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* 반투명 검은 배경 */
+  display: none; /* 기본은 숨김 */
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 모달 내부 콘텐츠 영역 */
+#photoOptionsModal .modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 모달 내 버튼 기본 스타일 */
+#photoOptionsModal button {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background: #28a745;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#photoOptionsModal button:hover {
+  background: #0056b3;
+}
+
+/* 사진 삭제 버튼 스타일 (빨간색) */
+#photoOptionsModal #btnDeletePhoto {
+  background: #dc3545;
+}
+
+#photoOptionsModal #btnDeletePhoto:hover {
+  background: #b02a37;
+}
+
+/* 사진 파일 변경 버튼 스타일 (녹색) */
+#photoOptionsModal #btnChangePhotoFile {
+  background: #28a745;
+}
+
+#photoOptionsModal #btnChangePhotoFile:hover {
+  background: #1e7e34;
+}
+#photoOptionsModal {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  flex-direction: column;
+}
+#btnExitOptions {
+  background-color: #0077ff;
 }

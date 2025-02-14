@@ -132,6 +132,8 @@ document.addEventListener("DOMContentLoaded", function () {
       modalHistoryPushed = false;
       history.back();
     }
+    // 옵션 모달도 함께 닫기
+    photoOptionsModal.style.display = "none";
   }
 
   /* ---------- 브라우저 뒤로가기(popstate) 이벤트 (모바일 포함) ---------- */
@@ -206,9 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .from("photos")
       .insert(
         [{ url: urlData.publicUrl, description, media_type: mediaType }],
-        {
-          returning: "representation",
-        }
+        { returning: "representation" }
       );
     if (insertError) {
       alert(
@@ -384,6 +384,153 @@ document.addEventListener("DOMContentLoaded", function () {
       modalHistoryPushed = true;
     }
   }
+
+  /* ---------- 옵션 모달 열기/닫기 이벤트 추가 ---------- */
+  openOptionBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    photoOptionsModal.style.display = "flex";
+  });
+  btnExitOptions.addEventListener("click", function (e) {
+    e.stopPropagation();
+    photoOptionsModal.style.display = "none";
+  });
+
+  /* ---------- 사진 옵션 모달: 사진 수정 기능 ---------- */
+  btnEditPhoto.addEventListener("click", async function (e) {
+    e.stopPropagation();
+
+    // 비밀번호 확인
+    const pwd = prompt("사진 수정을 위해 비밀번호를 입력하세요");
+    if (pwd !== "america") {
+      alert("비밀번호가 틀렸습니다!");
+      return;
+    }
+
+    // 새 설명을 입력 (기존 설명을 기본값으로)
+    const newDescription = prompt(
+      "새로운 사진 설명을 입력하세요",
+      currentPhotoRecord.description
+    );
+    if (newDescription === null) return; // 취소한 경우
+
+    // 새 파일이 선택되었는지 확인 (파일이 선택되면 새 파일로 교체)
+    if (editFileInput.files && editFileInput.files[0]) {
+      const newFile = editFileInput.files[0];
+      const mediaType = newFile.type.startsWith("video/") ? "video" : "image";
+      const newFilePath = `uploads/${Date.now()}_${newFile.name}`;
+
+      // 새 파일 업로드
+      const { error: uploadError } = await supabaseClient.storage
+        .from("images")
+        .upload(newFilePath, newFile);
+      if (uploadError) {
+        alert("새 파일 업로드 중 오류 발생: " + uploadError.message);
+        return;
+      }
+
+      // 새 파일의 public URL 가져오기
+      const { data: urlData, error: urlError } = supabaseClient.storage
+        .from("images")
+        .getPublicUrl(newFilePath);
+      if (urlError) {
+        alert("새 미디어 URL을 가져오는 중 오류 발생: " + urlError.message);
+        return;
+      }
+      const newUrl = urlData.publicUrl;
+
+      // 사진 레코드 업데이트 (파일 URL, 설명, 미디어 타입 모두 업데이트)
+      const { error: updateError } = await supabaseClient
+        .from("photos")
+        .update({
+          url: newUrl,
+          description: newDescription,
+          media_type: mediaType,
+        })
+        .eq("id", currentPhotoRecord.id);
+      if (updateError) {
+        alert("사진 정보 업데이트 중 오류 발생: " + updateError.message);
+        return;
+      }
+
+      // 기존 파일 삭제 (기존 파일의 경로가 있을 경우)
+      const oldFilePath = getFilePathFromUrl(currentPhotoRecord.url);
+      if (oldFilePath) {
+        await supabaseClient.storage.from("images").remove([oldFilePath]);
+      }
+
+      alert("사진이 수정되었습니다.");
+
+      // 현재 표시 내용 업데이트
+      currentPhotoRecord.url = newUrl;
+      currentPhotoRecord.description = newDescription;
+      currentPhotoRecord.mediaType = mediaType;
+
+      if (currentPhotoRecord.mediaType === "video") {
+        let modalVideo = document.getElementById("modalVideo");
+        if (modalVideo) {
+          modalVideo.src = newUrl;
+          modalVideo.load();
+        }
+      } else {
+        modalImage.src = newUrl;
+      }
+      imageDescription.textContent = newDescription;
+      // 입력 필드 초기화
+      editFileInput.value = "";
+    } else {
+      // 파일 변경 없이 설명만 업데이트하는 경우
+      const { error: updateError } = await supabaseClient
+        .from("photos")
+        .update({ description: newDescription })
+        .eq("id", currentPhotoRecord.id);
+      if (updateError) {
+        alert("사진 설명 업데이트 중 오류 발생: " + updateError.message);
+        return;
+      }
+      alert("사진 설명이 수정되었습니다.");
+      currentPhotoRecord.description = newDescription;
+      imageDescription.textContent = newDescription;
+    }
+  });
+
+  /* ---------- 사진 옵션 모달: 사진 삭제 기능 ---------- */
+  btnDeletePhoto.addEventListener("click", async function (e) {
+    e.stopPropagation();
+
+    // 비밀번호 확인
+    const pwd = prompt("사진 삭제를 위해 비밀번호를 입력하세요");
+    if (pwd !== "america") {
+      alert("비밀번호가 틀렸습니다!");
+      return;
+    }
+
+    if (!confirm("정말로 사진을 삭제하시겠습니까?")) return;
+
+    // 데이터베이스에서 사진 레코드 삭제
+    const { error: delError } = await supabaseClient
+      .from("photos")
+      .delete()
+      .eq("id", currentPhotoRecord.id);
+    if (delError) {
+      alert("사진 삭제 중 오류 발생: " + delError.message);
+      return;
+    }
+
+    // 스토리지에서 파일 삭제 (파일 경로 추출)
+    const filePath = getFilePathFromUrl(currentPhotoRecord.url);
+    if (filePath) {
+      await supabaseClient.storage.from("images").remove([filePath]);
+    }
+
+    alert("사진이 삭제되었습니다.");
+
+    // 갤러리에서 해당 사진 DOM 요소 제거
+    if (currentPhotoRecord.element) {
+      currentPhotoRecord.element.remove();
+    }
+    // 모달 닫기
+    closeModal(true);
+  });
 
   /* ---------- 터치 이벤트: 슬라이드와 핀치 구분, 아래로 스와이프 시 모달 닫기 ---------- */
   imageModal.addEventListener("touchstart", function (e) {
@@ -800,51 +947,3 @@ document.addEventListener("DOMContentLoaded", function () {
   // 초기 추천 캐러셀 로드
   loadRecommended();
 });
-// 사진 옵션 모달 열기
-openOptionBtn.addEventListener("click", function (e) {
-  e.stopPropagation(); // 이벤트 전파 방지
-  photoOptionsModal.style.display = "flex";
-});
-
-// 사진 옵션 모달 닫기 (나가기 버튼)
-btnExitOptions.addEventListener("click", function () {
-  photoOptionsModal.style.display = "none";
-});
-btnDeletePhoto.addEventListener("click", async function () {
-  const password = prompt("삭제를 위해 비밀번호를 입력하세요");
-  if (password !== "america") {
-    alert("비밀번호가 틀렸습니다!");
-    return;
-  }
-
-  if (!currentPhotoRecord) {
-    alert("삭제할 사진이 선택되지 않았습니다.");
-    return;
-  }
-
-  const { error: delError } = await supabaseClient
-    .from("photos")
-    .delete()
-    .eq("id", currentPhotoRecord.id);
-
-  if (delError) {
-    alert("삭제 중 오류가 발생했습니다: " + delError.message);
-    return;
-  }
-
-  const filePath = getFilePathFromUrl(currentPhotoRecord.url);
-  if (filePath) {
-    await supabaseClient.storage.from("images").remove([filePath]);
-  }
-
-  alert("사진이 삭제되었습니다.");
-  photoOptionsModal.style.display = "none";
-  currentPhotoRecord.element.remove(); // 갤러리에서 사진 제거
-});
-// 예시: 수정 버튼 이벤트 리스너
-btnEditPhoto.addEventListener("click", function () {
-  // 수정 로직 구현
-  alert("수정 기능이 아직 구현되지 않았습니다.");
-});
-
-// 예시: 삭제 버튼 이벤트 리스너
