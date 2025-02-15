@@ -1,23 +1,29 @@
 body {
   font-family: Arial, sans-serif;
   text-align: center;
-  background-color: rgb(232, 243, 253);
+  background-color: rgb(47, 51, 67);
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  height: 1500px;
 }
 
 header {
-  color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
   height: 40px;
   font-family: Arial, sans-serif;
   font-size: 10px;
   padding: 10px;
   display: flex;
   align-items: center;
+  height: 80px;
   justify-content: space-between;
-  background-color: rgb(228, 234, 245);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  font-size: medium;
+}
+
+.header-title {
+  color: #ffffff;
+  display: flex;
 }
 
 /* 갤러리 캐러셀 컨테이너 */
@@ -262,7 +268,8 @@ header {
 #uploadBtn {
   font-size: 200%;
   background: none;
-  color: white;
+  word-break: keep-all;
+  color: rgb(117, 117, 117);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -292,7 +299,7 @@ header {
   margin: 5px;
   padding: 10px;
   background: #3498db;
-  color: white;
+  color: rgb(0, 0, 0);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -508,14 +515,22 @@ header {
 
 /* 드롭다운 버튼 */
 .dropdown-btn {
-  background-color: #41a314;
-  color: white;
+  margin-top: 10px;
+  width: 100px;
+  margin-top: 100px !important;
+  color: rgb(0, 106, 255);
   border: none;
+  text-decoration: underline;
   padding: 10px;
   cursor: pointer;
   border-radius: 8px;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
-  font-weight: 900;
+  font-weight: bolder;
+  width: 200px;
+  word-break: keep-all;
+  font-size: medium;
+  /* shadow */
+  box-shadow: #000;
 }
 
 /* 드롭다운 메뉴 */
@@ -523,6 +538,7 @@ header {
   display: none;
   position: absolute;
   right: 0;
+  width: 400px;
   background-color: white;
   min-width: 160px;
   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
@@ -597,11 +613,7 @@ dropdown-btn:hover,
 .dropdown.active .dropdown-content {
   display: block;
 }
-.header-title {
-  color: #41a314;
-  display: flex;
-  align-items: space-between;
-}
+
 /* 옵션 모달 전체 배경 */
 #photoOptionsModal {
   position: fixed;
@@ -732,4 +744,25 @@ dropdown-btn:hover,
 }
 #btnExitOptions {
   background-color: #0077ff;
+}
+.advertisement {
+  margin: 10px !important;
+  font-size: small;
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+.adlink {
+  font-weight: bolder;
+  color: #0073ff;
+}
+.dropbtn {
+  background: none;
+  font-size: larger;
+  height: 200% !important;
+}
+a {
+  font-weight: bolder;
+  color: #0073ff !important;
+  text-decoration: underline !important;
 }
