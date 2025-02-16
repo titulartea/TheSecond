@@ -947,3 +947,59 @@ document.addEventListener("DOMContentLoaded", function () {
   // 초기 추천 캐러셀 로드
   loadRecommended();
 });
+document.addEventListener("DOMContentLoaded", function () {
+  const uploadPhotoLink = document.getElementById("uploadPhotoLink");
+  const mainModal = document.getElementById("mainModal");
+
+  uploadPhotoLink.addEventListener("click", function (event) {
+    event.preventDefault(); // Prevent default link behavior
+    mainModal.style.display = "flex"; // Open the upload modal
+    activateTab("galleryTab"); // Activate the gallery upload tab
+  });
+});
+document.addEventListener("DOMContentLoaded", function () {
+  const cactusButton = document.querySelector(".cactus");
+  const trashbinButton = document.querySelector(".trashbin");
+  const uploadButton = document.querySelector(".upload");
+  const mainModal = document.getElementById("mainModal");
+
+  cactusButton.addEventListener("click", function () {
+    const userConfirmed = confirm("더욱 훌륭한 작품을 보러 가시겠습니까?");
+    if (userConfirmed) {
+      window.location.href = "https://cactusworld3.netlify.app/";
+    }
+  });
+
+  trashbinButton.addEventListener("click", function () {
+    const userConfirmed = confirm(
+      "습작들과 업로드하기에는 애매한 것들을 올린 사이트로 이동"
+    );
+    if (userConfirmed) {
+      window.location.href = "https://trashbin.netlify.app/";
+    }
+  });
+
+  uploadButton.addEventListener("click", function () {
+    mainModal.style.display = "flex"; // Open the upload modal
+    activateTab("galleryTab"); // Activate the gallery upload tab
+  });
+
+  function activateTab(tabId) {
+    const galleryTab = document.getElementById("galleryTab");
+    const recTab = document.getElementById("recTab");
+    const tabButtons = document.querySelectorAll(".tab-btn");
+
+    if (tabId === "galleryTab") {
+      galleryTab.style.display = "block";
+      recTab.style.display = "none";
+    } else {
+      galleryTab.style.display = "none";
+      recTab.style.display = "block";
+    }
+    tabButtons.forEach((btn) => {
+      btn.getAttribute("data-tab") === tabId
+        ? btn.classList.add("active")
+        : btn.classList.remove("active");
+    });
+  }
+});
