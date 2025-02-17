@@ -987,6 +987,9 @@ a {
   justify-content: start;
 }
 @media (max-width: 650px) {
+  #carousel-slide img {
+    scale: 3;
+  }
   header {
     flex-direction: column;
     height: 90px;
@@ -1037,5 +1040,17 @@ a {
   .simbol {
     height: 40px;
     margin: 10px;
+  }
+  #carousel {
+    object-fit: fill;
+    margin-bottom: 300px;
+  }
+  .carousel-slide {
+    /* shadow */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px) brightness(2);
+  }
+  .footer {
+    margin-bottom: 30px;
   }
 }
