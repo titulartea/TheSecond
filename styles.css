@@ -1,4 +1,6 @@
 html {
+  height: 100vh;
+  position: fixed;
   overflow-y: hidden;
   ::-webkit-scrollbar {
     display: none;
@@ -32,7 +34,7 @@ main {
 
 header {
   color: rgb(255, 213, 153);
-  width: 100%;
+  width: 100vw;
   background-color: rgba(25, 27, 43);
 
   font-family: Arial, sans-serif;
@@ -48,6 +50,10 @@ header {
   top: 0px;
   z-index: 5;
   position: absolute;
+  white-space: nowrap;
+}
+h1 {
+  padding-top: 15px;
 }
 
 .page-gradient {
@@ -114,7 +120,7 @@ header {
   margin-top: 100px;
   display: flex;
 
-  width: 100vw;
+  width: 70%;
   height: 90vh;
   overflow: hidden;
   background-color: rgba(0, 0, 0, 0.2);
@@ -193,7 +199,7 @@ header {
 
   z-index: 3;
   width: 40%;
-  height: 100vh;
+  height: 80vh;
   overflow-y: scroll;
 
   background-color: rgba(0, 0, 0, 0.2);
@@ -980,8 +986,9 @@ a {
   display: flex;
   justify-content: start;
 }
-@media (max-width: 450px) {
+@media (max-width: 650px) {
   header {
+    flex-direction: column;
     height: 90px;
   }
   h1 {
@@ -990,10 +997,45 @@ a {
   .header-title {
     display: flex;
     justify-content: center;
-    height: 50px;
   }
   .btns {
     display: flex;
-    margin-right: 0;
+    margin: 0;
+  }
+  #gallery {
+    width: 45%;
+  }
+  #gallery .gallery-item img {
+    width: 100%;
+  }
+
+  .btns {
+    padding: 1px;
+    height: 20px;
+    position: absolute;
+    top: 70px;
+    width: 33%;
+    right: 33%;
+  }
+  .btns button {
+    font-size: medium;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  header {
+    flex-direction: column;
+    height: 80px;
+  }
+  h1 {
+    padding: 0;
+  }
+}
+@media (max-width: 400px) {
+  .simbol {
+    height: 40px;
+    margin: 10px;
   }
 }
