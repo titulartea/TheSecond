@@ -1,7 +1,7 @@
 html {
   height: 100vh;
   position: fixed;
-  overflow-y: hidden;
+  overflow-y: scroll;
   ::-webkit-scrollbar {
     display: none;
   }
@@ -203,7 +203,7 @@ h1 {
   width: 40%;
   height: 80vh;
   overflow-y: scroll;
-
+  margin-bottom: 200px;
   background-color: rgba(0, 0, 0, 0.2);
 }
 
@@ -968,7 +968,6 @@ a {
   }
 }
 .footer {
-  position: absolute;
   margin: 0;
   padding: 0;
   left: 30px;
@@ -1087,4 +1086,13 @@ a {
   .btns {
     top: 50px;
   }
+}
+.blank {
+  display: flex;
+  width: 100%;
+  height: 800px;
+  align-items: end;
+}
+.footer {
+  margin-left: 20px;
 }
