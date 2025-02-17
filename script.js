@@ -1016,3 +1016,38 @@ gallery.addEventListener("click", function (e) {
     resetCarouselAuto();
   }
 });
+// Add this function to handle adding images to the carousel
+function addImageToCarousel(imageElement) {
+  const carousel = document.getElementById("carousel");
+  const slide = document.createElement("div");
+  slide.className = "carousel-slide";
+
+  const img = document.createElement("img");
+  img.src = imageElement.src;
+  img.alt = imageElement.getAttribute("data-description") || "Gallery Image";
+
+  slide.appendChild(img);
+  carousel.appendChild(slide);
+
+  // Update carousel slides array and reset the carousel auto-scroll
+  carouselSlides.push(slide);
+  resetCarouselAuto();
+}
+
+// Modify the existing gallery click event listener
+gallery.addEventListener("click", function (e) {
+  if (e.target.tagName === "IMG" || e.target.tagName === "VIDEO") {
+    const galleryItems = Array.from(
+      gallery.querySelectorAll(".gallery-item > *")
+    );
+    const clickedIndex = galleryItems.indexOf(e.target);
+
+    // Add the clicked image to the carousel
+    addImageToCarousel(e.target);
+
+    // Update the carousel to show the clicked image
+    carouselIndex = clickedIndex;
+    updateCarousel();
+    resetCarouselAuto();
+  }
+});
