@@ -458,7 +458,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await supabaseClient.storage.from("images").remove([oldFilePath]);
       }
 
-      alert("사진이 수정되었습니다.");
+      alert("사진이 수정되었습니다!");
 
       // 현재 표시 내용 업데이트
       currentPhotoRecord.url = newUrl;
