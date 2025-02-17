@@ -40,7 +40,6 @@ header {
 
   font-family: Arial, sans-serif;
   font-size: 10px;
-  padding: 10px;
 
   display: flex;
   align-items: center;
@@ -52,6 +51,8 @@ header {
   z-index: 5;
   position: absolute;
   white-space: nowrap;
+  /* shodow bottom */
+  box-shadow: 0 4px 6px rgba(255, 213, 153);
 }
 h1 {
   padding-top: 15px;
@@ -946,7 +947,7 @@ a {
     padding: 1px;
     height: 20px;
     position: absolute;
-    top: 70px;
+    top: 50px;
     width: 33%;
     right: 33%;
   }
@@ -1059,7 +1060,7 @@ a {
   #carousel-container {
     position: relative;
     display: block;
-    width: 100%;
+    width: 150%;
     height: 200px;
     margin-top: 0;
     margin: 0;
@@ -1082,5 +1083,8 @@ a {
     left: 20px;
     right: 20px;
     margin-top: 300px; /* 캐러셀 아래에 위치하도록 설정 */
+  }
+  .btns {
+    top: 50px;
   }
 }
