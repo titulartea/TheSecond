@@ -1,32 +1,39 @@
+html {
+  overflow-y: hidden;
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
 body {
   font-family: Arial, sans-serif;
   text-align: center;
-  background-color: rgb(255, 255, 255);
   margin: 0;
+  background-color: rgba(10, 16, 24);
   padding: 0;
   -webkit-tap-highlight-color: transparent;
-  height: 200vh;
+  color: #000000;
+  height: 100vh;
+  padding-top: 20px;
+}
+
+main {
+  display: flex;
 }
 .page-gradient {
-  background: linear-gradient(
-    rgb(255, 255, 255) 70%,
-    rgb(0, 255, 0, 0.3) 80%,
-    rgb(0, 0, 255, 0.3) 90%,
-    rgb(255, 0, 0, 0.6) 100%
-  );
-
   position: fixed;
+  opacity: 0.8;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh !important;
   z-index: 1;
   margin: 0;
-  z-index: -9;
+  z-index: -1;
 }
 
 header {
-  color: rgb(0, 0, 0);
+  width: 100%;
+  color: #000000;
   height: 40px;
   font-family: Arial, sans-serif;
   font-size: 10px;
@@ -36,9 +43,14 @@ header {
   height: 80px;
   justify-content: space-between;
   font-size: small;
+  margin: 0;
+  top: 20px;
+  z-index: 5;
+  background-color: rgba(255, 255, 255, 0.8);
+  position: absolute;
 }
 
-.circle_overlay {
+/* .circle_overlay {
   position: absolute;
   height: 200px;
   width: 200px;
@@ -90,17 +102,15 @@ header {
   left: 80px;
   top: 80px;
   z-index: -1;
-}
+} */
 /* 갤러리 캐러셀 컨테이너 */
 #carousel-container {
-  position: relative;
+  margin-top: 100px;
   display: flex;
-  justify-content: center;
-  width: 90%;
-  height: 200pt;
-  margin: 20px auto;
+
+  width: 100vw;
+  height: 90vh;
   overflow: hidden;
-  border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.2);
 }
 
@@ -113,7 +123,7 @@ header {
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(8px) brightness(0.7);
+  filter: grayscale(90%) blur(10px) brightness(0.5);
   z-index: 0;
 }
 
@@ -170,29 +180,35 @@ header {
 
 /* 갤러리 Grid 레이아웃 */
 #gallery {
+  margin-top: 100px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
-  min-block-size: 500px;
   padding: 5%;
-  min-width: 200px;
+  z-index: 3;
+  width: 30%;
+  height: 80vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-bottom: 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 5%;
 }
 
 .gallery-item {
   transition: 0.4s;
   width: 100%;
+  margin-bottom: 110px;
   aspect-ratio: 4/3;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
+
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .gallery-item img {
-  width: 100%;
+  width: 90%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.9s;
@@ -812,11 +828,11 @@ dropdown-btn:hover,
   background-color: #0077ff;
 }
 .advertisement {
-  margin: 10px !important;
-  font-size: small;
+  font-size: smaller;
+  opacity: 0.2;
   margin: 0;
   padding: 0;
-  color: #000000;
+  color: white !important;
 }
 .adlink {
   font-weight: bolder;
@@ -894,19 +910,49 @@ a {
   justify-content: center;
   align-items: center;
   gap: 10px;
+  position: absolute;
+  top: 25px;
+  right: 50px;
 }
 @media (max-width: 500px) {
+  #gallery {
+    width: 45%;
+  }
+  #gallery .gallery-item img {
+    width: 100%;
+  }
+
   .btns {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 20px;
+    padding: 1px;
+    height: 20px;
+    position: absolute;
+    top: 70px;
+    width: 33%;
+    right: 33%;
+  }
+  .btns button {
+    font-size: medium;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   header {
     flex-direction: column;
-    height: 150px;
+    height: 80px;
   }
   .사족 {
     color: black;
   }
+}
+.footer {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  left: 30px;
+  bottom: -30px;
+  text-align: start;
+  font-size: small;
+  z-index: 7;
 }

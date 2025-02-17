@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let carouselIndex = 0;
   let carouselSlides = [];
   let carouselTimer = null;
-  const carouselInterval = 2500;
+  const carouselInterval = 5000;
 
   // 새 사진 옵션 모달 관련 요소
   const photoOptionsModal = document.getElementById("photoOptionsModal");
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
   submitBtn.addEventListener("click", async function () {
     const password = passwordInput.value;
     const description = descriptionInput.value.trim();
-    if (password !== "america") {
+    if (password !== "AF50") {
       alert("비밀번호가 틀렸습니다!");
       return;
     }
@@ -401,7 +401,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 비밀번호 확인
     const pwd = prompt("사진 수정을 위해 비밀번호를 입력하세요");
-    if (pwd !== "america") {
+    if (pwd !== "AF50") {
       alert("비밀번호가 틀렸습니다!");
       return;
     }
@@ -499,7 +499,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 비밀번호 확인
     const pwd = prompt("사진 삭제를 위해 비밀번호를 입력하세요");
-    if (pwd !== "america") {
+    if (pwd !== "AF50") {
       alert("비밀번호가 틀렸습니다!");
       return;
     }
@@ -647,7 +647,7 @@ document.addEventListener("DOMContentLoaded", function () {
   submitRecBtn.addEventListener("click", async function () {
     const password = recPasswordInput.value;
     const description = recDescriptionInput.value.trim();
-    if (password !== "america") {
+    if (password !== "AF50") {
       alert("비밀번호가 틀렸습니다!");
       return;
     }
@@ -726,7 +726,7 @@ document.addEventListener("DOMContentLoaded", function () {
         delBtn.addEventListener("click", async function (e) {
           e.stopPropagation();
           const pwd = prompt("삭제를 위해 비밀번호를 입력하세요");
-          if (pwd !== "america") {
+          if (pwd !== "AF50") {
             alert("비밀번호가 틀렸습니다!");
             return;
           }
@@ -796,7 +796,7 @@ document.addEventListener("DOMContentLoaded", function () {
         delBtn.addEventListener("click", async function (e) {
           e.stopPropagation();
           const pwd = prompt("삭제를 위해 비밀번호를 입력하세요");
-          if (pwd !== "america") {
+          if (pwd !== "AF50") {
             alert("비밀번호가 틀렸습니다!");
             return;
           }
@@ -964,7 +964,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const mainModal = document.getElementById("mainModal");
 
   cactusButton.addEventListener("click", function () {
-    const userConfirmed = confirm("더욱 훌륭한 작품을 보러 가시겠습니까?");
+    const userConfirmed = confirm("한재익 사이트로 이동");
     if (userConfirmed) {
       window.location.href = "https://cactusworld3.netlify.app/";
     }
@@ -1001,5 +1001,18 @@ document.addEventListener("DOMContentLoaded", function () {
         ? btn.classList.add("active")
         : btn.classList.remove("active");
     });
+  }
+});
+gallery.addEventListener("click", function (e) {
+  if (e.target.tagName === "IMG" || e.target.tagName === "VIDEO") {
+    const galleryItems = Array.from(
+      gallery.querySelectorAll(".gallery-item > *")
+    );
+    const clickedIndex = galleryItems.indexOf(e.target);
+
+    // Update the carousel to show the clicked image
+    carouselIndex = clickedIndex;
+    updateCarousel();
+    resetCarouselAuto();
   }
 });

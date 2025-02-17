@@ -11,7 +11,7 @@
     <header>
       <div class="header-title">
         <h1>THE SECOND GALLERY</h1>
-        <p class="사족">it's all about RGB</p>
+
         <button id="uploadBtn">👉</button>
       </div>
       <!-- 업로드 모달 열기 -->
@@ -42,17 +42,19 @@
     </header>
 
     <!-- 추천 사진 캐러셀 (갤러리 위) -->
-    <div id="carousel-container">
-      <div id="carousel-bg"></div>
-      <div id="carousel"></div>
-      <button class="carousel-arrow left" id="prevCarousel">❮</button>
-      <button class="carousel-arrow right" id="nextCarousel">❯</button>
-    </div>
+    <main>
+      <div id="carousel-container">
+        <div id="carousel-bg"></div>
+        <div id="carousel"></div>
+        <button class="carousel-arrow left" id="prevCarousel">❮</button>
+        <button class="carousel-arrow right" id="nextCarousel">❯</button>
+      </div>
 
-    <!-- 갤러리 -->
-    <div id="gallery"></div>
-    <button id="loadMoreBtn" style="display: none">더 보기</button>
+      <!-- 갤러리 -->
+      <div id="gallery"></div>
 
+      <button id="loadMoreBtn" style="display: none">더 보기</button>
+    </main>
     <!-- 통합 업로드/관리 모달 -->
     <div id="mainModal" class="modal">
       <div class="modal-content upload-modal">
@@ -144,11 +146,15 @@
       />
       <button id="btnExitOptions">옵션 닫기</button>
     </div>
-    <p class="advertisement">
-      Designed by Park Eunchan<br />Developed by Han jake
-    </p>
-    <p class="advertisement">더욱 다양한 작업물</p>
-    <a class="adlink" href="https://cactusworld3.netlify.app/">Cactus World</a>
+    <div class="footer">
+      <p class="advertisement">
+        Designed by Park Eunchan<br />Developed by Han Jake
+      </p>
+      <p class="advertisement">더욱 다양한 작업물</p>
+      <a class="adlink" href="https://cactusworld3.netlify.app/"
+        >Cactus World</a
+      >
+    </div>
     <!-- 수정 시 파일 교체를 위한 숨김 파일 입력 -->
     <input type="file" id="editFileInput" style="display: none" />
     <div class="circle_overlay"></div>
