@@ -1054,3 +1054,32 @@ a {
     margin-bottom: 30px;
   }
 }
+@media (max-width: 450px) {
+  #carousel-container {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 200px;
+    margin-top: 0;
+    margin: 0;
+    position: relative;
+    top: 90px; /* 헤더 바로 아래에 위치하도록 설정 */
+  }
+  #carousel * {
+    margin: 0;
+  }
+  html {
+    position: relative;
+  }
+
+  #gallery {
+    position: absolute;
+    grid-template-columns: repeat(1, 1);
+    width: 100%;
+    height: 499px;
+    overflow-y: scroll;
+    left: 20px;
+    right: 20px;
+    margin-top: 300px; /* 캐러셀 아래에 위치하도록 설정 */
+  }
+}
