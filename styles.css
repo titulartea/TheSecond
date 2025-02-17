@@ -15,6 +15,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   color: #070707;
   height: 100vh;
+  width: 100%;
 }
 
 main {
@@ -1075,7 +1076,7 @@ a {
   #gallery {
     position: absolute;
     grid-template-columns: repeat(1, 1);
-    width: 100%;
+    width: 90%;
     height: 499px;
     overflow-y: scroll;
     left: 20px;
