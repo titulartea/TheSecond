@@ -7,18 +7,15 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
  * Supabase에서 발급받은 public URL을 Netlify 프록시용 상대 URL로 변환하는 함수
- * - Supabase URL 예시:
- *   https://ilqlhkpicnmtkeoafboe.supabase.co/storage/v1/render/image/public/uploads/파일명?width=800&quality=80
- * - 변환 후: /images/uploads/파일명?width=800&quality=80
+ * 예: https://ilqlhkpicnmtkeoafboe.supabase.co/storage/v1/object/public/images/uploads/파일명?...
+ *  =>  /images/uploads/파일명?...
  */
 function getRelativeImageUrl(supabasePublicUrl) {
-  // 만약 이미 상대 경로라면 그대로 반환
   if (!supabasePublicUrl.startsWith("http")) {
     return supabasePublicUrl;
   }
   try {
     const urlObj = new URL(supabasePublicUrl);
-    // "/uploads/" 이후의 경로를 추출하여 "/images" 접두어와 결합
     const marker = "/uploads/";
     const idx = urlObj.pathname.indexOf(marker);
     if (idx === -1) return supabasePublicUrl;
@@ -31,10 +28,6 @@ function getRelativeImageUrl(supabasePublicUrl) {
 
 /**
  * 영상 URL로부터 "중간 프레임" 썸네일을 생성하는 함수
- * - 데스크탑 브라우저에서 메타데이터 로드/시킹 문제를 방지하기 위해
- *   임시로 비디오를 DOM에 추가한 뒤, 썸네일을 생성하고 제거한다.
- * @param {string} videoUrl - 영상의 URL
- * @param {function} callback - 썸네일 dataURL을 반환할 콜백 함수
  */
 function generateVideoThumbnail(videoUrl, callback) {
   const tempVideo = document.createElement("video");
@@ -58,14 +51,13 @@ function generateVideoThumbnail(videoUrl, callback) {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
     const thumbnailDataUrl = canvas.toDataURL();
-
     document.body.removeChild(tempVideo);
     callback(thumbnailDataUrl);
   });
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  /* ---------- 모달 및 갤러리 관련 전역 변수 ---------- */
+  /* ---------- 전역 변수 ---------- */
   let modalHistoryPushed = false;
   let modalTouchStartX = 0;
   let modalTouchStartY = 0;
@@ -88,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const tabButtons = document.querySelectorAll(".tab-btn");
   const galleryTab = document.getElementById("galleryTab");
   const recTab = document.getElementById("recTab");
+
   const passwordInput = document.getElementById("password");
   const fileInput = document.getElementById("fileInput");
   const descriptionInput = document.getElementById("description");
@@ -134,15 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const zoomInBtn = document.getElementById("zoomInBtn");
   const zoomOutBtn = document.getElementById("zoomOutBtn");
 
-  /* ---------- Supabase Storage 관련 ---------- */
-  // 참고: Netlify를 통한 프록시 적용을 위해, getPublicUrl 호출 시 transform 옵션을 적용한 후
-  // 반환된 URL을 상대 URL (/images/...)로 변환합니다.
-  // _redirects 파일 (public 폴더)에 아래 규칙을 추가하세요:
-  // /images/*  https://ilqlhkpicnmtkeoafboe.supabase.co/storage/v1/render/image/public/:splat 200!
-
-  /* ---------- Helper 함수: getRelativeImageUrl는 위에 정의됨 ---------- */
-
-  /* ---------- 모달 닫기 공통 함수 ---------- */
+  /* ---------- 모달 닫기 함수 ---------- */
   function closeModal(manual = false) {
     imageModal.style.display = "none";
     const modalVideo = document.getElementById("modalVideo");
@@ -193,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  /* ---------- Supabase Storage를 통한 갤러리 업로드 ---------- */
+  /* ---------- 갤러리 업로드 ---------- */
   submitBtn.addEventListener("click", async function () {
     const password = passwordInput.value;
     const description = descriptionInput.value.trim();
@@ -215,22 +200,17 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("업로드 중 오류가 발생했습니다: " + error.message);
       return;
     }
-    // 이미지 최적화를 위해 transform 옵션 적용 (width:800, quality:80)
+    // transform 옵션 제거 – 기본 public URL을 요청
     const { data: urlData, error: urlError } = supabaseClient.storage
       .from("images")
-      .getPublicUrl(filePath, {
-        transform: {
-          width: 800,
-          quality: 80,
-        },
-      });
+      .getPublicUrl(filePath);
     if (urlError) {
       alert(
         "미디어 URL을 가져오는 중 오류가 발생했습니다: " + urlError.message
       );
       return;
     }
-    // Netlify 프록시를 활용하기 위해 상대 URL로 변환
+    // 이미지인 경우, Netlify 프록시를 위해 상대 URL로 변환
     const optimizedUrl =
       mediaType === "image"
         ? getRelativeImageUrl(urlData.publicUrl)
@@ -307,7 +287,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       } else {
         const img = document.createElement("img");
-        // 이미지의 경우 상대 URL로 변환해 사용 (이미 _redirects 규칙 적용)
         img.src = getRelativeImageUrl(item.url);
         img.setAttribute(
           "data-description",
@@ -442,12 +421,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       const { data: urlData, error: urlError } = supabaseClient.storage
         .from("images")
-        .getPublicUrl(newFilePath, {
-          transform: {
-            width: 800,
-            quality: 80,
-          },
-        });
+        .getPublicUrl(newFilePath);
       if (urlError) {
         alert("새 미디어 URL을 가져오는 중 오류 발생: " + urlError.message);
         return;
@@ -529,7 +503,7 @@ document.addEventListener("DOMContentLoaded", function () {
     closeModal(true);
   });
 
-  /* ---------- 터치 이벤트 (슬라이드/핀치/모달 닫기) ---------- */
+  /* ---------- 터치 이벤트 (슬라이드, 핀치, 모달 닫기) ---------- */
   imageModal.addEventListener("touchstart", function (e) {
     if (e.touches.length === 2) {
       modalInitialDistance = Math.hypot(
@@ -657,12 +631,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     const { data: urlData, error: urlError } = supabaseClient.storage
       .from("images")
-      .getPublicUrl(filePath, {
-        transform: {
-          width: 800,
-          quality: 80,
-        },
-      });
+      .getPublicUrl(filePath);
     if (urlError) {
       alert(
         "미디어 URL을 가져오는 중 오류가 발생했습니다: " + urlError.message
@@ -1006,8 +975,6 @@ gallery.addEventListener("click", function (e) {
       gallery.querySelectorAll(".gallery-item > *")
     );
     const clickedIndex = galleryItems.indexOf(e.target);
-
-    // 갤러리 클릭 시 해당 이미지를 캐러셀에 추가 후 보여주기
     addImageToCarousel(e.target);
     carouselIndex = clickedIndex;
     updateCarousel();
