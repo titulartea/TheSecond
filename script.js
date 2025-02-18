@@ -6,31 +6,15 @@ const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
- * Supabase에서 발급받은 public URL을 Netlify 프록시용 상대 URL로 변환하는 함수
- * 예: https://ilqlhkpicnmtkeoafboe.supabase.co/storage/v1/object/public/images/uploads/파일명?...
- *  =>  /images/uploads/파일명?...
- */
-function getRelativeImageUrl(supabasePublicUrl) {
-  if (!supabasePublicUrl.startsWith("http")) {
-    return supabasePublicUrl;
-  }
-  try {
-    const urlObj = new URL(supabasePublicUrl);
-    const marker = "/uploads/";
-    const idx = urlObj.pathname.indexOf(marker);
-    if (idx === -1) return supabasePublicUrl;
-    return "/images" + urlObj.pathname.substring(idx) + urlObj.search;
-  } catch (err) {
-    console.error("URL 변환 오류:", err);
-    return supabasePublicUrl;
-  }
-}
-
-/**
  * 영상 URL로부터 "중간 프레임" 썸네일을 생성하는 함수
+ * - 데스크탑 브라우저에서 메타데이터 로드/시킹 문제를 방지하기 위해
+ *   임시로 비디오를 DOM에 추가한 뒤, 썸네일을 생성하고 제거한다.
+ * @param {string} videoUrl - 영상의 URL
+ * @param {function} callback - 썸네일 dataURL을 반환할 콜백 함수
  */
 function generateVideoThumbnail(videoUrl, callback) {
   const tempVideo = document.createElement("video");
+  // 임시로 DOM에 추가 (데스크탑에서 메타데이터 로드/시킹 안정화)
   tempVideo.style.display = "none";
   document.body.appendChild(tempVideo);
 
@@ -40,10 +24,12 @@ function generateVideoThumbnail(videoUrl, callback) {
   tempVideo.muted = true;
   tempVideo.playsInline = true;
 
+  // 메타데이터가 로드되면, 영상 중간 지점으로 이동
   tempVideo.addEventListener("loadedmetadata", function () {
     tempVideo.currentTime = tempVideo.duration / 2;
   });
 
+  // 중간 지점으로 이동한 후, 캔버스에 그려서 썸네일 생성
   tempVideo.addEventListener("seeked", function () {
     const canvas = document.createElement("canvas");
     canvas.width = tempVideo.videoWidth;
@@ -51,27 +37,23 @@ function generateVideoThumbnail(videoUrl, callback) {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
     const thumbnailDataUrl = canvas.toDataURL();
+
+    // 작업이 끝나면 임시 비디오를 DOM에서 제거
     document.body.removeChild(tempVideo);
+
+    // 콜백으로 썸네일 dataURL 반환
     callback(thumbnailDataUrl);
   });
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  /* ---------- 전역 변수 ---------- */
+  /* ---------- 모달 관련 전역 변수 (모달 히스토리, 터치 좌표 등) ---------- */
   let modalHistoryPushed = false;
   let modalTouchStartX = 0;
   let modalTouchStartY = 0;
   let modalInitialDistance = 0;
   let isPinching = false;
   let slideDisabledUntil = 0;
-  let currentScale = 1.0;
-  let currentIndex = 0;
-  let currentPhotoRecord = null;
-  let carouselSlides = [];
-  let carouselTimer = null;
-  const carouselInterval = 5000;
-  let offset = 0;
-  const limit = 32;
 
   /* ---------- 요소 선택 ---------- */
   const uploadBtn = document.getElementById("uploadBtn");
@@ -113,6 +95,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 추천 미디어 캐러셀 관련 변수
   let carouselIndex = 0;
+  let carouselSlides = [];
+  let carouselTimer = null;
+  const carouselInterval = 5000;
 
   // 새 사진 옵션 모달 관련 요소
   const photoOptionsModal = document.getElementById("photoOptionsModal");
@@ -124,10 +109,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const editFileInput = document.getElementById("editFileInput");
 
   // 확대/축소 관련
+  let currentScale = 1.0;
   const zoomInBtn = document.getElementById("zoomInBtn");
   const zoomOutBtn = document.getElementById("zoomOutBtn");
 
-  /* ---------- 모달 닫기 함수 ---------- */
+  // 기타 변수
+  let offset = 0;
+  const limit = 32;
+  let currentIndex = 0;
+  let currentPhotoRecord = null;
+
+  /* ---------- 모달 닫기 공통 함수 ---------- */
   function closeModal(manual = false) {
     imageModal.style.display = "none";
     const modalVideo = document.getElementById("modalVideo");
@@ -135,14 +127,17 @@ document.addEventListener("DOMContentLoaded", function () {
       modalVideo.pause();
       modalVideo.currentTime = 0;
     }
+    // 사용자가 직접 모달을 닫은 경우에만 히스토리 상태를 되돌림
     if (manual && modalHistoryPushed) {
       modalHistoryPushed = false;
       history.back();
     }
+    // 옵션 모달도 함께 닫기
     photoOptionsModal.style.display = "none";
   }
 
-  window.addEventListener("popstate", function () {
+  /* ---------- 브라우저 뒤로가기(popstate) 이벤트 (모바일 포함) ---------- */
+  window.addEventListener("popstate", function (event) {
     if (imageModal.style.display === "flex") {
       closeModal(false);
     }
@@ -178,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  /* ---------- 갤러리 업로드 ---------- */
+  /* ---------- 갤러리 업로드 (이미지/영상 공용) ---------- */
   submitBtn.addEventListener("click", async function () {
     const password = passwordInput.value;
     const description = descriptionInput.value.trim();
@@ -200,7 +195,6 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("업로드 중 오류가 발생했습니다: " + error.message);
       return;
     }
-    // transform 옵션 제거 – 기본 public URL을 요청
     const { data: urlData, error: urlError } = supabaseClient.storage
       .from("images")
       .getPublicUrl(filePath);
@@ -210,17 +204,12 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       return;
     }
-    // 이미지인 경우, Netlify 프록시를 위해 상대 URL로 변환
-    const optimizedUrl =
-      mediaType === "image"
-        ? getRelativeImageUrl(urlData.publicUrl)
-        : urlData.publicUrl;
-
     const { data: insertedData, error: insertError } = await supabaseClient
       .from("photos")
-      .insert([{ url: optimizedUrl, description, media_type: mediaType }], {
-        returning: "representation",
-      });
+      .insert(
+        [{ url: urlData.publicUrl, description, media_type: mediaType }],
+        { returning: "representation" }
+      );
     if (insertError) {
       alert(
         "미디어 정보를 저장하는 중 오류가 발생했습니다: " +
@@ -233,6 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const galleryItem = document.createElement("div");
     galleryItem.className = "gallery-item";
 
+    // 업로드 후 썸네일/이미지 갤러리에 추가
     if (mediaType === "video") {
       generateVideoThumbnail(urlData.publicUrl, function (thumbnailUrl) {
         const img = document.createElement("img");
@@ -246,7 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     } else {
       const img = document.createElement("img");
-      img.src = optimizedUrl;
+      img.src = urlData.publicUrl;
       img.setAttribute("data-description", description);
       img.setAttribute("data-id", photoRecord.id);
       img.setAttribute("data-media", "image");
@@ -256,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function () {
     mainModal.style.display = "none";
   });
 
-  /* ---------- 갤러리 로드 ---------- */
+  /* ---------- 갤러리 로드 (이미지/영상 공용) ---------- */
   async function loadGallery() {
     const { data, error } = await supabaseClient
       .from("photos")
@@ -270,6 +260,8 @@ document.addEventListener("DOMContentLoaded", function () {
     data.forEach((item) => {
       const galleryItem = document.createElement("div");
       galleryItem.className = "gallery-item";
+
+      // 영상이면 썸네일 생성, 이미지면 바로 표시
       if (item.media_type === "video") {
         const videoUrl = item.url;
         generateVideoThumbnail(videoUrl, function (thumbnailUrl) {
@@ -287,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       } else {
         const img = document.createElement("img");
-        img.src = getRelativeImageUrl(item.url);
+        img.src = item.url;
         img.setAttribute(
           "data-description",
           item.description || "설명이 없습니다."
@@ -314,6 +306,7 @@ document.addEventListener("DOMContentLoaded", function () {
       openImageModal(currentIndex);
     }
   });
+
   function openImageModal(index, animate = false) {
     const galleryItems = Array.from(
       gallery.querySelectorAll(".gallery-item > *")
@@ -345,6 +338,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modalVideo.controls = true;
         modalVideo.style.borderRadius = "8px";
         modalVideo.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        // 재생 중에는 이전/다음 버튼 비활성화
         modalVideo.addEventListener("play", function () {
           prevBtn.style.pointerEvents = "none";
           nextBtn.style.pointerEvents = "none";
@@ -382,36 +376,50 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     imageDescription.textContent = currentPhotoRecord.description;
     currentScale = 1.0;
-    if (currentPhotoRecord.mediaType === "video") {
-      let modalVideo = document.getElementById("modalVideo");
-      if (modalVideo) modalVideo.style.transform = `scale(${currentScale})`;
-    } else {
-      modalImage.style.transform = `scale(${currentScale})`;
-    }
     imageModal.style.display = "flex";
+
+    // 모달 오픈 시 히스토리 상태 추가 (아직 추가되지 않았다면)
     if (!modalHistoryPushed) {
       history.pushState({ modalOpen: true }, "");
       modalHistoryPushed = true;
     }
   }
 
+  /* ---------- 옵션 모달 열기/닫기 이벤트 추가 ---------- */
+  openOptionBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    photoOptionsModal.style.display = "flex";
+  });
+  btnExitOptions.addEventListener("click", function (e) {
+    e.stopPropagation();
+    photoOptionsModal.style.display = "none";
+  });
+
   /* ---------- 사진 옵션 모달: 사진 수정 기능 ---------- */
   btnEditPhoto.addEventListener("click", async function (e) {
     e.stopPropagation();
+
+    // 비밀번호 확인
     const pwd = prompt("사진 수정을 위해 비밀번호를 입력하세요");
     if (pwd !== "AF50") {
       alert("비밀번호가 틀렸습니다!");
       return;
     }
+
+    // 새 설명을 입력 (기존 설명을 기본값으로)
     const newDescription = prompt(
       "새로운 사진 설명을 입력하세요",
       currentPhotoRecord.description
     );
-    if (newDescription === null) return;
+    if (newDescription === null) return; // 취소한 경우
+
+    // 새 파일이 선택되었는지 확인 (파일이 선택되면 새 파일로 교체)
     if (editFileInput.files && editFileInput.files[0]) {
       const newFile = editFileInput.files[0];
       const mediaType = newFile.type.startsWith("video/") ? "video" : "image";
       const newFilePath = `uploads/${Date.now()}_${newFile.name}`;
+
+      // 새 파일 업로드
       const { error: uploadError } = await supabaseClient.storage
         .from("images")
         .upload(newFilePath, newFile);
@@ -419,6 +427,8 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("새 파일 업로드 중 오류 발생: " + uploadError.message);
         return;
       }
+
+      // 새 파일의 public URL 가져오기
       const { data: urlData, error: urlError } = supabaseClient.storage
         .from("images")
         .getPublicUrl(newFilePath);
@@ -426,9 +436,9 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("새 미디어 URL을 가져오는 중 오류 발생: " + urlError.message);
         return;
       }
-      const newUrl = newFile.type.startsWith("video/")
-        ? urlData.publicUrl
-        : getRelativeImageUrl(urlData.publicUrl);
+      const newUrl = urlData.publicUrl;
+
+      // 사진 레코드 업데이트 (파일 URL, 설명, 미디어 타입 모두 업데이트)
       const { error: updateError } = await supabaseClient
         .from("photos")
         .update({
@@ -441,14 +451,20 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("사진 정보 업데이트 중 오류 발생: " + updateError.message);
         return;
       }
+
+      // 기존 파일 삭제 (기존 파일의 경로가 있을 경우)
       const oldFilePath = getFilePathFromUrl(currentPhotoRecord.url);
       if (oldFilePath) {
         await supabaseClient.storage.from("images").remove([oldFilePath]);
       }
+
       alert("사진이 수정되었습니다!");
+
+      // 현재 표시 내용 업데이트
       currentPhotoRecord.url = newUrl;
       currentPhotoRecord.description = newDescription;
       currentPhotoRecord.mediaType = mediaType;
+
       if (currentPhotoRecord.mediaType === "video") {
         let modalVideo = document.getElementById("modalVideo");
         if (modalVideo) {
@@ -459,8 +475,10 @@ document.addEventListener("DOMContentLoaded", function () {
         modalImage.src = newUrl;
       }
       imageDescription.textContent = newDescription;
+      // 입력 필드 초기화
       editFileInput.value = "";
     } else {
+      // 파일 변경 없이 설명만 업데이트하는 경우
       const { error: updateError } = await supabaseClient
         .from("photos")
         .update({ description: newDescription })
@@ -478,12 +496,17 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ---------- 사진 옵션 모달: 사진 삭제 기능 ---------- */
   btnDeletePhoto.addEventListener("click", async function (e) {
     e.stopPropagation();
+
+    // 비밀번호 확인
     const pwd = prompt("사진 삭제를 위해 비밀번호를 입력하세요");
     if (pwd !== "AF50") {
       alert("비밀번호가 틀렸습니다!");
       return;
     }
+
     if (!confirm("정말로 사진을 삭제하시겠습니까?")) return;
+
+    // 데이터베이스에서 사진 레코드 삭제
     const { error: delError } = await supabaseClient
       .from("photos")
       .delete()
@@ -492,18 +515,24 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("사진 삭제 중 오류 발생: " + delError.message);
       return;
     }
+
+    // 스토리지에서 파일 삭제 (파일 경로 추출)
     const filePath = getFilePathFromUrl(currentPhotoRecord.url);
     if (filePath) {
       await supabaseClient.storage.from("images").remove([filePath]);
     }
+
     alert("사진이 삭제되었습니다.");
+
+    // 갤러리에서 해당 사진 DOM 요소 제거
     if (currentPhotoRecord.element) {
       currentPhotoRecord.element.remove();
     }
+    // 모달 닫기
     closeModal(true);
   });
 
-  /* ---------- 터치 이벤트 (슬라이드, 핀치, 모달 닫기) ---------- */
+  /* ---------- 터치 이벤트: 슬라이드와 핀치 구분, 아래로 스와이프 시 모달 닫기 ---------- */
   imageModal.addEventListener("touchstart", function (e) {
     if (e.touches.length === 2) {
       modalInitialDistance = Math.hypot(
@@ -523,6 +552,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
   imageModal.addEventListener("touchend", function (e) {
+    // 동영상 재생 중이면 슬라이드 전환 무시
     if (currentPhotoRecord && currentPhotoRecord.mediaType === "video") {
       const modalVideo = document.getElementById("modalVideo");
       if (modalVideo && !modalVideo.paused) return;
@@ -533,14 +563,19 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if (Date.now() < slideDisabledUntil) return;
+
     let modalTouchEndX = e.changedTouches[0].clientX;
     let modalTouchEndY = e.changedTouches[0].clientY;
     let diffX = modalTouchStartX - modalTouchEndX;
     let diffY = modalTouchEndY - modalTouchStartY;
+
+    // 수직으로 50px 이상 내려갔고, 수평 이동보다 수직 이동이 더 큰 경우 모달 닫기
     if (diffY > 50 && diffY > Math.abs(diffX)) {
       closeModal(true);
       return;
     }
+
+    // 가로 스와이프 (좌우 슬라이드 전환)
     if (Math.abs(diffX) > 50) {
       diffX > 0 ? nextBtn.click() : prevBtn.click();
     }
@@ -568,6 +603,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  /* ---------- 모달 닫을 때 동영상 재생 종료 ---------- */
   closeImageBtn.addEventListener("click", function () {
     closeModal(true);
   });
@@ -607,7 +643,7 @@ document.addEventListener("DOMContentLoaded", function () {
     openImageModal(currentIndex, true);
   });
 
-  /* ---------- 추천 미디어 관리 탭 ---------- */
+  /* ---------- 추천 미디어 관리 탭 (이미지/영상 공용) ---------- */
   submitRecBtn.addEventListener("click", async function () {
     const password = recPasswordInput.value;
     const description = recDescriptionInput.value.trim();
@@ -638,13 +674,9 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       return;
     }
-    const optimizedUrl =
-      mediaType === "image"
-        ? getRelativeImageUrl(urlData.publicUrl)
-        : urlData.publicUrl;
     const { error: insertError } = await supabaseClient
       .from("recommended")
-      .insert([{ url: optimizedUrl, description, media_type: mediaType }]);
+      .insert([{ url: urlData.publicUrl, description, media_type: mediaType }]);
     if (insertError) {
       alert(
         "추천 미디어 정보를 저장하는 중 오류가 발생했습니다: " +
@@ -682,7 +714,7 @@ document.addEventListener("DOMContentLoaded", function () {
           thumb.style.height = "auto";
         } else {
           thumb = document.createElement("img");
-          thumb.src = getRelativeImageUrl(item.url);
+          thumb.src = item.url;
         }
         const info = document.createElement("span");
         info.textContent = item.description || "";
@@ -750,7 +782,7 @@ document.addEventListener("DOMContentLoaded", function () {
           mediaElement.style.height = "100%";
         } else {
           mediaElement = document.createElement("img");
-          mediaElement.src = getRelativeImageUrl(item.url);
+          mediaElement.src = item.url;
         }
         mediaElement.alt = item.description || "추천 미디어";
         mediaElement.addEventListener("click", function () {
@@ -897,6 +929,8 @@ document.addEventListener("DOMContentLoaded", function () {
       modalImage.style.transform = `scale(${currentScale})`;
     }
     imageModal.style.display = "flex";
+
+    // 모달 오픈 시 히스토리 상태 추가 (아직 추가되지 않았다면)
     if (!modalHistoryPushed) {
       history.pushState({ modalOpen: true }, "");
       modalHistoryPushed = true;
@@ -918,9 +952,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const mainModal = document.getElementById("mainModal");
 
   uploadPhotoLink.addEventListener("click", function (event) {
-    event.preventDefault();
-    mainModal.style.display = "flex";
-    activateTab("galleryTab");
+    event.preventDefault(); // Prevent default link behavior
+    mainModal.style.display = "flex"; // Open the upload modal
+    activateTab("galleryTab"); // Activate the gallery upload tab
   });
 });
 document.addEventListener("DOMContentLoaded", function () {
@@ -946,8 +980,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   uploadButton.addEventListener("click", function () {
-    mainModal.style.display = "flex";
-    activateTab("galleryTab");
+    mainModal.style.display = "flex"; // Open the upload modal
+    activateTab("galleryTab"); // Activate the gallery upload tab
   });
 
   function activateTab(tabId) {
@@ -975,12 +1009,14 @@ gallery.addEventListener("click", function (e) {
       gallery.querySelectorAll(".gallery-item > *")
     );
     const clickedIndex = galleryItems.indexOf(e.target);
-    addImageToCarousel(e.target);
+
+    // Update the carousel to show the clicked image
     carouselIndex = clickedIndex;
     updateCarousel();
     resetCarouselAuto();
   }
 });
+// Add this function to handle adding images to the carousel
 function addImageToCarousel(imageElement) {
   const carousel = document.getElementById("carousel");
   const slide = document.createElement("div");
@@ -993,6 +1029,26 @@ function addImageToCarousel(imageElement) {
   slide.appendChild(img);
   carousel.appendChild(slide);
 
+  // Update carousel slides array and reset the carousel auto-scroll
   carouselSlides.push(slide);
   resetCarouselAuto();
 }
+
+// Modify the existing gallery click event listener
+gallery.addEventListener("click", function (e) {
+  if (e.target.tagName === "IMG" || e.target.tagName === "VIDEO") {
+    const galleryItems = Array.from(
+      gallery.querySelectorAll(".gallery-item > *")
+    );
+    const clickedIndex = galleryItems.indexOf(e.target);
+
+    // Add the clicked image to the carousel
+    addImageToCarousel(e.target);
+
+    // Update the carousel to show the clicked image
+    carouselIndex = clickedIndex;
+    updateCarousel();
+    resetCarouselAuto();
+  }
+});
+// Add this function to handle adding images to the carousel
