@@ -1,7 +1,7 @@
 // Supabase 클라이언트를 전역에서 사용하도록 설정
-const SUPABASE_URL = "https://rjoyqxetuzihawdtbmux.supabase.co";
+const SUPABASE_URL = "https://ilqlhkpicnmtkeoafboe.supabase.co";
 const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqb3lxeGV0dXppaGF3ZHRibXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzMzg1MDgsImV4cCI6MjA1NDkxNDUwOH0.TeiZ-HKVY7pUkQaZDom6e0IatDTg1sHN3KP0Xuum1Eo";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlscWxoa3BpY25tdGtlb2FmYm9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MTY2MjcsImV4cCI6MjA1NTQ5MjYyN30.VOLhs73Ss17kZ2IGjdw8n5BQr-HogE8pMQ6FGSM9d1M";
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 

@@ -126,6 +126,7 @@ h1 {
   height: 90vh;
   overflow: hidden;
   background-color: rgba(0, 0, 0, 0.2);
+  /* shadow */
 }
 
 #carousel-bg {
@@ -145,12 +146,14 @@ h1 {
   display: flex;
   transition: transform 0.5s ease-in-out;
   z-index: 1;
+  box-shadow: 0 4px 6px rgba(255, 213, 153);
 }
 
 .carousel-slide {
   min-width: 100%;
   height: 100%;
   position: relative;
+
   background-color: transparent;
 }
 
@@ -209,6 +212,7 @@ h1 {
 
 .gallery-item {
   transition: 0.4s;
+
   width: 90%;
   margin-bottom: 110px;
   aspect-ratio: 5/3;
@@ -1074,11 +1078,11 @@ a {
   }
 
   #gallery {
+    display: bock;
     position: absolute;
     grid-template-columns: repeat(1, 1);
     width: 90%;
-    height: 499px;
-    overflow-y: scroll;
+    height: 100%;
     left: 20px;
     right: 20px;
     margin-top: 300px; /* 캐러셀 아래에 위치하도록 설정 */
@@ -1088,7 +1092,7 @@ a {
   }
 }
 .blank {
-  display: flex;
+  display: inline-flexbox;
   width: 100%;
   height: 800px;
   align-items: end;
