@@ -1097,6 +1097,8 @@ a {
     .gallery_container {
       display: flex;
       height: 10%;
+      margin: 0;
+      padding: 0;
     }
     .blank {
     }
