@@ -130,7 +130,7 @@ h1 {
 }
 
 #carousel-bg {
-  transition: 2s;
+  transition: 0.1s;
   position: absolute;
   top: 0;
   left: 0;
@@ -1069,9 +1069,26 @@ a {
     margin: 0;
     position: relative;
     top: 90px; /* 헤더 바로 아래에 위치하도록 설정 */
+    object-fit: contain;
   }
   #carousel * {
     margin: 0;
+    object-fit: contain;
+  }
+  #carousel {
+    object-fit: contain !important;
+  }
+  .carousel-slide {
+    object-fit: contain !important;
+    height: 10%;
+    display: block;
+    position: static;
+    overflow: visible;
+  }
+  .carousel-slide img {
+    object-fit: contain;
+    width: 100%;
+    height: 200px;
   }
   /* styles.css 추가 */
   @media (max-width: 450px) {
