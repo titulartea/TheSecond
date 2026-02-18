@@ -235,12 +235,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       const { data: insertedData, error: insertError } = await supabaseClient
         .from("photos")
-        .insert(
-          [{ url: uploadedUrl, description: desc, media_type: mediaType }],
-          { returning: "representation" }
-        );
-      if (insertError) {
-        console.error(`파일 ${i + 1} DB 저장 실패:`, insertError.message);
+        .insert([{ url: uploadedUrl, description: desc, media_type: mediaType }])
+        .select();
+      if (insertError || !insertedData || insertedData.length === 0) {
+        console.error(`파일 ${i + 1} DB 저장 실패:`, insertError?.message);
         continue;
       }
       successCount++;
