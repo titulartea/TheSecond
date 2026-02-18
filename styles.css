@@ -1,0 +1,1133 @@
+html {
+  height: 100vh;
+  position: fixed;
+  overflow-y: scroll;
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  background-color: rgba(10, 16, 24);
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  color: #070707;
+  height: 100vh;
+  width: 100%;
+}
+
+main {
+  display: flex;
+}
+.page-gradient {
+  position: fixed;
+  opacity: 0.8;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh !important;
+  z-index: 1;
+  margin: 0;
+  z-index: -1;
+}
+
+header {
+  color: rgb(255, 213, 153);
+  width: 100vw;
+  background-color: rgba(25, 27, 43);
+
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+
+  display: flex;
+  align-items: center;
+  height: 90px;
+  justify-content: space-between;
+  font-size: small;
+  margin: 0;
+  top: 0px;
+  z-index: 5;
+  position: absolute;
+  white-space: nowrap;
+  /* shodow bottom */
+  box-shadow: 0 4px 6px rgba(255, 213, 153);
+}
+h1 {
+  padding-top: 15px;
+}
+
+.page-gradient {
+  background-color: rgba(25, 27, 43, 0.8);
+
+  z-index: 0;
+}
+
+/* .circle_overlay {
+  position: absolute;
+  height: 200px;
+  width: 200px;
+  top: -10px;
+  background: rgba(255, 0, 0, 0.8);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  z-index: -6;
+}
+.circle_overlay2 {
+  position: absolute;
+  height: 200px;
+  width: 200px;
+  background: rgba(0, 0, 255, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  left: 50px;
+  top: -80px;
+  z-index: -3;
+}
+.circle_overlay3 {
+  position: absolute;
+  height: 200px;
+  width: 200px;
+  background: rgba(0, 255, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  left: 80px;
+  top: 80px;
+  z-index: -1;
+} */
+/* 갤러리 캐러셀 컨테이너 */
+#carousel-container {
+  margin-top: 100px;
+  display: flex;
+
+  width: 70%;
+  height: 90vh;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.2);
+  /* shadow */
+}
+
+#carousel-bg {
+  transition: 0.1s;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px) brightness(0.8);
+  z-index: -999;
+}
+
+#carousel {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  z-index: 1;
+  box-shadow: 0 4px 6px rgba(255, 213, 153);
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+
+  background-color: transparent;
+}
+
+.carousel-slide img {
+  width: 90%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+  z-index: 90;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  user-select: none;
+  z-index: 2;
+}
+
+.carousel-arrow.left {
+  left: 10px;
+  width: 30%;
+  height: 100%;
+  opacity: 0;
+}
+
+.carousel-arrow.right {
+  right: 10px;
+  width: 30%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* 갤러리 Grid 레이아웃 */
+#gallery {
+  margin-top: 100px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+
+  z-index: 3;
+  width: 40%;
+  height: 80vh;
+  overflow-y: scroll;
+  margin-bottom: 200px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.gallery-item {
+  transition: 0.4s;
+
+  width: 90%;
+  margin-bottom: 110px;
+  aspect-ratio: 5/3;
+
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10%;
+}
+
+.gallery-item img {
+  width: 90%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.9s;
+  cursor: pointer;
+}
+
+.gallery-item img:hover {
+  transform: scale(1.3);
+}
+
+/* 모달 공통 스타일 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+/* 업로드 모달 스타일 */
+.upload-modal {
+  background-color: #fefefe;
+  padding: 20px;
+  border-radius: 8px;
+  width: 320px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* 모달 닫기 버튼 */
+.close {
+  float: right;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/* 탭 버튼 영역 */
+.tab-buttons {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #ccc;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.tab-btn.active {
+  background: #41a314;
+  color: white;
+}
+
+/* 탭 내용 영역 */
+.tab-content {
+  text-align: left;
+}
+
+/* 추천 사진 목록 스타일 */
+#recList {
+  margin-top: 15px;
+}
+
+.rec-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rec-item img {
+  width: 60px;
+  height: auto;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.delete-rec {
+  display: none;
+}
+
+/* "더 보기" 버튼 */
+#loadMoreBtn {
+  margin: auto;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: xx-large;
+  font-weight: bolder;
+  background: rgb(255, 255, 255, 0);
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  transition: 0.3s;
+  display: block;
+}
+
+/* 이미지 확대 모달 스타일 */
+.image-modal {
+  position: relative;
+  background: rgba(106, 106, 106, 0);
+  padding: 10px;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: 0.3s;
+}
+
+#modalImage {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+/* 이미지 설명 */
+#imageDescription {
+  color: white;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+/* 업로드 버튼 및 입력폼 스타일 */
+#uploadBtn {
+  font-size: 200%;
+  background: none;
+  word-break: keep-all;
+  color: rgb(117, 117, 117);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#password,
+#description,
+#recPassword,
+#recDescription {
+  width: 90%;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+#fileInput,
+#recFileInput {
+  margin: 5px;
+  padding: 10px;
+}
+
+/* 추천 사진 업로드 버튼 */
+#submitBtn,
+#submitRecBtn {
+  margin: 5px;
+  padding: 10px;
+  background: #3498db;
+  color: rgb(0, 0, 0);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* 좌우 화살표 버튼 (갤러리 확대 모달) */
+.arrow {
+  position: fixed;
+  width: 50%;
+  height: 30%;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 40px;
+  color: rgb(168, 168, 168);
+  cursor: pointer;
+  user-select: none;
+  z-index: 20;
+  padding: 10px;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.arrow.left {
+  display: flex;
+  padding-top: 100px;
+  justify-content: flex-start;
+  left: 20px;
+}
+
+.arrow.right {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 100px;
+  right: 20px;
+}
+
+.modal-close-btn {
+  position: fixed;
+  top: 20px;
+  margin-left: 10px;
+  margin-top: 10px;
+  padding: 13px 16px;
+  background-color: rgba(98, 97, 109, 0.4);
+  color: white;
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-close-btn:hover {
+  background-color: #41a314;
+}
+
+#openOptionBtn {
+  position: fixed;
+  top: 10px;
+  right: 20px;
+  background: none;
+  font-weight: 900;
+  font-size: x-large;
+}
+
+/* 새 사진 옵션 모달 스타일 */
+#photoOptionsModal {
+  display: none;
+  position: fixed;
+  z-index: 11;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  justify-content: center;
+  align-items: center;
+}
+#photoOptionsModal .modal-content.option-modal {
+  width: 300px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+#photoOptionsModal .modal-btn.exit-btn {
+  margin-top: 15px;
+  background-color: #ffffff;
+  color: black;
+  border: 2px solid #000;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* 추가: 이미지 컨테이너 및 확대/축소 컨트롤 */
+.image-container {
+  position: relative;
+}
+
+#zoomControls {
+  border-radius: 90px;
+  position: fixed;
+  top: 23px;
+  padding-bottom: 5px;
+  font-size: x-large;
+  right: 70px;
+  display: flex;
+  gap: 5px;
+  z-index: 20;
+  display: none;
+}
+
+#zoomControls button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2em;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+/* 사진 옵션 모달 전체 영역 */
+#photoOptionsModal {
+  display: none; /* 기본 상태: 숨김 */
+  position: fixed;
+  z-index: 11;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 사진 옵션 모달 내부 컨텐츠 */
+#photoOptionsModal .modal-content.option-modal {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+  position: relative;
+}
+
+/* 모달 제목 스타일 */
+#photoOptionsModal .modal-content.option-modal h3 {
+  margin-top: 0;
+  font-size: 1.5em;
+  color: #333333;
+}
+
+/* 사진 옵션 모달 버튼 공통 스타일 */
+#photoOptionsModal .modal-content.option-modal button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* 수정 버튼 스타일 */
+#photoOptionsModal .modal-content.option-modal button#btnEditPhoto {
+  background-color: #41a314;
+  color: #ffffff;
+}
+
+/* 삭제 버튼 스타일 */
+#photoOptionsModal .modal-content.option-modal button#btnDeletePhoto {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+/* 나가기 버튼 스타일 */
+#photoOptionsModal .modal-content.option-modal button#btnExitOptions {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+#header-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+}
+#notificationSettingsBtn {
+  display: none;
+  background-color: rgba(47, 48, 55, 0.9);
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 드롭다운 컨테이너 */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* 드롭다운 버튼 */
+.dropdown-btn {
+  margin-top: 10px;
+  width: 100px;
+  margin-top: 100px !important;
+  color: rgb(0, 106, 255);
+  border: none;
+  text-decoration: underline;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: bolder;
+  width: 200px;
+  word-break: keep-all;
+  font-size: medium;
+  /* shadow */
+  box-shadow: #000;
+}
+
+/* 드롭다운 메뉴 */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  width: 400px;
+  background-color: white;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  border-radius: 8px;
+}
+
+/* 드롭다운 메뉴 링크 */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* 링크 호버 효과 */
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+/* 마우스 오버 시 메뉴 표시 */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+#modalVideo {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background-color: #000; /* 혹은 다른 배경색 */
+}
+dropdown-btn:hover,
+.dropdown-btn:focus {
+  background-color: #ff7f50;
+  transform: scale(1.05);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+}
+
+/* 드롭다운 메뉴 */
+.dropdown-content {
+  transition: 0.3s;
+  display: none;
+  right: 0;
+  background-color: rgb(255, 255, 255);
+  width: 90vw !important;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  border-radius: 8px;
+}
+
+/* 드롭다운 메뉴 링크 */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  transition: background-color 0.3s, color 0.3s, transform 0.3s;
+  border-radius: 4px;
+  font-weight: 900;
+  font-size: larger;
+  height: 150%;
+}
+
+/* 링크 호버 효과 */
+.dropdown-content a:hover {
+  background-color: #f0f0f0;
+  color: #41a314;
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 모바일 환경에서 클릭 시 메뉴 표시 */
+.dropdown.active .dropdown-content {
+  display: block;
+}
+
+/* 옵션 모달 전체 배경 */
+#photoOptionsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* 반투명 검은 배경 */
+  display: none; /* 기본은 숨김 */
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 모달 내부 콘텐츠 영역 */
+#photoOptionsModal .modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 모달 내 버튼 기본 스타일 */
+#photoOptionsModal button {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#photoOptionsModal button:hover {
+  background: #0056b3;
+}
+
+/* 사진 삭제 버튼 스타일 (빨간색) */
+#photoOptionsModal #btnDeletePhoto {
+  background: #dc3545;
+}
+
+#photoOptionsModal #btnDeletePhoto:hover {
+  background: #b02a37;
+}
+
+/* 사진 파일 변경 버튼 스타일 (녹색) */
+#photoOptionsModal #btnChangePhotoFile {
+  background: #28a745;
+}
+
+#photoOptionsModal #btnChangePhotoFile:hover {
+  background: #1e7e34;
+}
+/* 옵션 모달 전체 배경 */
+#photoOptionsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* 반투명 검은 배경 */
+  display: none; /* 기본은 숨김 */
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 모달 내부 콘텐츠 영역 */
+#photoOptionsModal .modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 모달 내 버튼 기본 스타일 */
+#photoOptionsModal button {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background: #28a745;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#photoOptionsModal button:hover {
+  background: #0056b3;
+}
+
+/* 사진 삭제 버튼 스타일 (빨간색) */
+#photoOptionsModal #btnDeletePhoto {
+  background: #dc3545;
+}
+
+#photoOptionsModal #btnDeletePhoto:hover {
+  background: #b02a37;
+}
+
+/* 사진 파일 변경 버튼 스타일 (녹색) */
+#photoOptionsModal #btnChangePhotoFile {
+  background: #28a745;
+}
+
+#photoOptionsModal #btnChangePhotoFile:hover {
+  background: #1e7e34;
+}
+#photoOptionsModal {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  flex-direction: column;
+}
+#btnExitOptions {
+  background-color: #0077ff;
+}
+.advertisement {
+  font-size: smaller;
+  opacity: 0.2;
+  margin: 0;
+  padding: 0;
+  color: white !important;
+}
+.adlink {
+  font-weight: bolder;
+  color: #0073ff;
+}
+.dropbtn {
+  display: none;
+  background: none;
+  font-size: larger;
+  position: absolute;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  top: -20px;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: red;
+  font-weight: 900;
+  font-size: x-large;
+}
+a {
+  font-weight: bolder;
+  color: #0073ff !important;
+  text-decoration: underline !important;
+}
+#uploadBtn {
+  display: none;
+}
+.사족 {
+  margin: 0;
+  color: white;
+}
+.cactus {
+  font-size: larger;
+
+  width: 50px;
+  height: 50px;
+  object-fit: fill;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgb(255, 202, 123);
+  font-weight: 900;
+  font-size: x-large;
+  padding-bottom: 5px;
+}
+.trashbin {
+  font-size: larger;
+
+  width: 50px;
+  height: 50px;
+  padding-bottom: 5px;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgb(255, 202, 123);
+  font-weight: 900;
+  font-size: x-large;
+}
+.upload {
+  font-size: larger;
+
+  width: 50px;
+  height: 50px;
+  padding-bottom: 5px;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgb(255, 202, 123);
+  font-weight: 900;
+  font-size: x-large;
+}
+.btns {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-right: 30px;
+}
+.btns button {
+  font-size: larger;
+  border-radius: 1px !important;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+@media (max-width: 500px) {
+  #gallery {
+    width: 45%;
+  }
+  #gallery .gallery-item img {
+    width: 100%;
+  }
+
+  .btns {
+    padding: 1px;
+    height: 20px;
+    position: absolute;
+    top: 50px;
+    width: 33%;
+    right: 33%;
+  }
+  .btns button {
+    font-size: medium;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  header {
+    flex-direction: column;
+    height: 80px;
+  }
+  .사족 {
+    color: black;
+  }
+}
+
+.imgbtn {
+  width: 30px;
+}
+.simbol {
+  height: 50px;
+  margin: 20px;
+}
+.header-title {
+  display: flex;
+  justify-content: start;
+}
+@media (max-width: 650px) {
+  #carousel-slide img {
+    scale: 3;
+  }
+  header {
+    flex-direction: column;
+    height: 90px;
+  }
+  h1 {
+    font-size: 20px;
+  }
+  .header-title {
+    display: flex;
+    justify-content: center;
+  }
+  .btns {
+    display: flex;
+    margin: 0;
+  }
+  #gallery {
+    width: 45%;
+  }
+  #gallery .gallery-item img {
+    width: 100%;
+  }
+
+  .btns {
+    padding: 1px;
+    height: 20px;
+    position: absolute;
+    top: 70px;
+    width: 33%;
+    right: 33%;
+  }
+  .btns button {
+    font-size: medium;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  header {
+    flex-direction: column;
+    height: 80px;
+  }
+  h1 {
+    padding: 0;
+  }
+}
+@media (max-width: 400px) {
+  .simbol {
+    height: 40px;
+    margin: 10px;
+  }
+  #carousel {
+    object-fit: fill;
+    margin-bottom: 300px;
+  }
+  .carousel-slide {
+    /* shadow */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px) brightness(2);
+  }
+
+}
+@media (max-width: 450px) {
+  #carousel-container {
+    position: relative;
+    display: block;
+    width: 150%;
+    height: 200px;
+    margin-top: 0;
+    margin: 0;
+    position: relative;
+    top: 90px; /* 헤더 바로 아래에 위치하도록 설정 */
+    object-fit: contain;
+  }
+  #carousel * {
+    margin: 0;
+    object-fit: contain;
+  }
+  #carousel {
+    object-fit: contain !important;
+  }
+  .carousel-slide {
+    object-fit: contain !important;
+    height: 10%;
+    display: block;
+    position: static;
+    overflow: visible;
+  }
+  .carousel-slide img {
+    object-fit: contain;
+    width: 100%;
+    height: 200px;
+  }
+  /* styles.css 추가 */
+  @media (max-width: 450px) {
+    .gallery_container {
+      width: 100%;
+      padding: 10px;
+      overflow-x: hidden;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    #gallery {
+      width: 100% !important;
+      height: 100%;
+
+      overflow-y: visible;
+    }
+
+    .gallery-item {
+      margin: 5px;
+    }
+    .gallery_container {
+      display: flex;
+      height: 10%;
+      margin: 0;
+      padding: 0;
+    }
+    .blank {
+    }
+  }
+  html {
+    position: relative;
+  }
+  main {
+    display: block;
+  }
+  #carousel-container {
+    width: 100%;
+  }
+
+  .btns {
+    top: 50px;
+  }
+}
+.blank {
+  display: inline-flexbox;
+  width: 100%;
+  height: 800px;
+  align-items: end;
+}
+
