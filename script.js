@@ -1084,34 +1084,4 @@ gallery.addEventListener("click", function (e) {
     resetCarouselAuto();
   }
 });
-// Add this function to handle adding images to the carousel
-// script.js에 추가
-document.addEventListener("DOMContentLoaded", function () {
-  function wrapGalleryForMobile() {
-    const gallery = document.getElementById("gallery");
-    const main = document.querySelector("main");
-
-    if (
-      window.innerWidth <= 450 &&
-      !gallery.parentElement.classList.contains("gallery_container")
-    ) {
-      const container = document.createElement("div");
-      container.className = "gallery_container";
-      gallery.parentNode.insertBefore(container, gallery);
-      container.appendChild(gallery);
-    } else if (
-      window.innerWidth > 450 &&
-      gallery.parentElement.classList.contains("gallery_container")
-    ) {
-      const container = gallery.parentElement;
-      container.parentNode.insertBefore(gallery, container);
-      container.remove();
-    }
-  }
-
-  // 초기 실행
-  wrapGalleryForMobile();
-
-  // 리사이즈 이벤트 리스너
-  window.addEventListener("resize", wrapGalleryForMobile);
-});
+// Layout is now handled purely by CSS flexbox + media queries

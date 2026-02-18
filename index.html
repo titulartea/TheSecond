@@ -67,8 +67,8 @@
       <!-- 갤러리 -->
       <div class="gallery_container">
         <div id="gallery"></div>
+        <button id="loadMoreBtn" style="display: none">+</button>
       </div>
-      <button id="loadMoreBtn" style="display: none">더 보기</button>
     </main>
 
     <!-- 통합 업로드/관리 모달 -->
@@ -165,12 +165,6 @@
       />
       <button id="btnExitOptions">옵션 닫기</button>
     </div>
-
-    <!-- 수정 시 파일 교체를 위한 숨김 파일 입력 -->
-    <input type="file" id="editFileInput" style="display: none" />
-    <div class="circle_overlay"></div>
-    <div class="circle_overlay2"></div>
-    <div class="circle_overlay3"></div>
 
     <!-- Supabase 라이브러리 및 스크립트 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
